@@ -3,6 +3,7 @@
   background: radial-gradient(circle at 24% 20%, #f0f4ff 0, #f8f9ff 30%, #ffffff 65%);
   color: #0f172a;
   position: relative;
+  --webcam-frame-size: min(360px, 100%);
 }
 
 .image-classification .ic-shell {
@@ -278,7 +279,9 @@
   background: #0f1115;
   border-radius: 12px;
   overflow: hidden;
-  height: 160px;
+  aspect-ratio: 1 / 1;
+  width: var(--webcam-frame-size);
+  margin-inline: auto;
 }
 
 .image-classification .capture-slot video {
@@ -318,8 +321,9 @@
   width: 100%;
 }
 
+/* Match active step (blue) */
 .image-classification .dataCollector.primary {
-  background: linear-gradient(135deg, #28a745, #218838);
+  background: linear-gradient(135deg, #3f73ff, #2554d3);
 }
 
 .image-classification .count-row {
@@ -439,7 +443,14 @@
   background: #0f1115;
   border-radius: 12px;
   overflow: hidden;
-  height: 240px;
+  aspect-ratio: 1 / 1;
+  width: var(--webcam-frame-size);
+  margin-inline: auto;
+}
+
+.image-classification .webcam-panel .dataCollector.block {
+  width: var(--webcam-frame-size);
+  margin-inline: auto;
 }
 
 .image-classification .video-shell video {
