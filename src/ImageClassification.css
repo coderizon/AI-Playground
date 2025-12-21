@@ -1,0 +1,472 @@
+.image-classification {
+  min-height: 100%;
+  background: radial-gradient(circle at 24% 20%, #f0f4ff 0, #f8f9ff 30%, #ffffff 65%);
+  color: #0f172a;
+  position: relative;
+}
+
+.image-classification .ic-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 18px 16px 34px;
+  box-sizing: border-box;
+}
+
+.image-classification .ic-hidden-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.image-classification .ic-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.image-classification .ic-menu {
+  appearance: none;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(14, 22, 48, 0.06);
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.image-classification .ic-menu:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.image-classification .ic-menu:active {
+  transform: translateY(0);
+}
+
+.image-classification .ic-menu:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
+.image-classification .ic-menu-lines {
+  position: relative;
+  width: 18px;
+  height: 2px;
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 999px;
+}
+
+.image-classification .ic-menu-lines::before,
+.image-classification .ic-menu-lines::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 999px;
+}
+
+.image-classification .ic-menu-lines::before {
+  top: -6px;
+}
+
+.image-classification .ic-menu-lines::after {
+  top: 6px;
+}
+
+.image-classification .ic-title {
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.image-classification .ic-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.image-classification .ic-step {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(15, 23, 42, 0.72);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(17, 34, 68, 0.08);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  white-space: nowrap;
+}
+
+.image-classification .ic-step:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 20px 50px rgba(17, 34, 68, 0.12);
+}
+
+.image-classification .ic-step:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.image-classification .ic-step.active {
+  background: linear-gradient(135deg, #3f73ff, #2554d3);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #fff;
+}
+
+.image-classification .ic-step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.08);
+  color: rgba(15, 23, 42, 0.7);
+  font-weight: 900;
+}
+
+.image-classification .ic-step.active .ic-step-number {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.image-classification .ic-stage {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-classification .training-column,
+.image-classification .preview-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-classification .card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #d9e0ec;
+  padding: 16px;
+  box-shadow: 0 16px 40px rgba(17, 34, 68, 0.12);
+  box-sizing: border-box;
+}
+
+.image-classification .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.image-classification .card-header.spaced h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.image-classification .class-name-input {
+  flex: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+
+.image-classification .class-name-input:focus-visible {
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.image-classification .dots {
+  font-size: 18px;
+  color: rgba(15, 23, 42, 0.5);
+  user-select: none;
+}
+
+.image-classification .classes-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-classification .webcam-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-classification .capture-slot {
+  background: #0f1115;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 160px;
+}
+
+.image-classification .capture-slot video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: block;
+}
+
+.image-classification .primary {
+  background: linear-gradient(135deg, #3f73ff, #2554d3);
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.image-classification .primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.image-classification .primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.image-classification .primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.image-classification .block {
+  width: 100%;
+}
+
+.image-classification .dataCollector.primary {
+  background: linear-gradient(135deg, #28a745, #218838);
+}
+
+.image-classification .count-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.image-classification .count-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(15, 23, 42, 0.04);
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.image-classification .dashed {
+  border: 2px dashed rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 22px 16px;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.image-classification .dashed:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.image-classification .add-placeholder {
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.image-classification .training-progress {
+  margin: 12px 0 0;
+}
+
+.image-classification .training-progress.hidden {
+  display: none;
+}
+
+.image-classification .training-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.7);
+  margin-bottom: 8px;
+}
+
+.image-classification .training-progress-bar {
+  height: 12px;
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.image-classification .training-progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #3f73ff, #2554d3);
+  width: 0%;
+  transition: width 0.2s;
+}
+
+.image-classification .accordion {
+  margin-top: 14px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding-top: 12px;
+}
+
+.image-classification .accordion summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.78);
+}
+
+.image-classification .form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.image-classification .form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.image-classification .form-grid input {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.image-classification .preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.image-classification .video-shell {
+  background: #0f1115;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 240px;
+}
+
+.image-classification .video-shell video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: block;
+}
+
+.image-classification .preview-output-header {
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.78);
+  margin-bottom: 10px;
+}
+
+.image-classification #probabilityList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-classification .probability-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.image-classification .probability-bar {
+  height: 14px;
+  background: #eceff5;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-classification .probability-bar-fill {
+  height: 100%;
+  background: #3f73ff;
+  transition: width 0.2s;
+  width: 0%;
+}
+
+.image-classification .status-banner {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(15, 23, 42, 0.8);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.image-classification .status-banner.error {
+  border-color: rgba(220, 38, 38, 0.22);
+  background: rgba(254, 242, 242, 0.9);
+  color: rgba(153, 27, 27, 0.92);
+}
+
+@media (max-width: 1020px) {
+  .image-classification .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .image-classification .ic-step {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .image-classification .ic-step-number {
+    width: 26px;
+    height: 26px;
+  }
+}

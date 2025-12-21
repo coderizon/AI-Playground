@@ -95,7 +95,7 @@ const MODELS = [
   },
 ];
 
-export default function LandingPage() {
+export default function LandingPage({ onSelectModel }) {
   const handleMenuClick = useCallback(() => {
     console.log('[Landing] menu');
   }, []);
@@ -104,9 +104,17 @@ export default function LandingPage() {
     console.log('[Landing] search');
   }, []);
 
-  const handleCardActivate = useCallback((model) => {
-    console.log('[Landing] card', model);
-  }, []);
+  const handleCardActivate = useCallback(
+    (model) => {
+      if (typeof onSelectModel === 'function') {
+        onSelectModel(model);
+        return;
+      }
+
+      console.log('[Landing] card', model);
+    },
+    [onSelectModel],
+  );
 
   const handleCardKeyDown = useCallback(
     (event, model) => {
@@ -193,4 +201,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
