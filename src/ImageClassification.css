@@ -251,6 +251,9 @@
 
 .image-classification .ic-webcam-x {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 18px;
   height: 18px;
   color: rgba(15, 23, 42, 0.9);

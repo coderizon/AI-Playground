@@ -265,10 +265,11 @@ function makeDefaultClass(index) {
 }
 
 export default function ImageClassification() {
-  const [classes, setClasses] = useState(() => [makeDefaultClass(0)]);
+  const initialClass = useMemo(() => makeDefaultClass(0), []);
+  const [classes, setClasses] = useState(() => [initialClass]);
 
   const [activeStep, setActiveStep] = useState('data');
-  const [isWebcamEnabled, setIsWebcamEnabled] = useState(true);
+  const [activeWebcamClassId, setActiveWebcamClassId] = useState(() => initialClass.id);
   const [epochs, setEpochs] = useState(10);
   const [batchSize, setBatchSize] = useState(5);
   const [learningRate, setLearningRate] = useState(0.001);
@@ -295,8 +296,14 @@ export default function ImageClassification() {
 
   const stream = streamRef.current;
 
-  const toggleWebcam = useCallback(() => {
-    setIsWebcamEnabled((prev) => !prev);
+  const shouldEnableWebcam = useMemo(() => {
+    if (activeStep === 'train') return false;
+    if (activeStep === 'test') return true;
+    return activeWebcamClassId !== null;
+  }, [activeStep, activeWebcamClassId]);
+
+  const toggleWebcamForClass = useCallback((classId) => {
+    setActiveWebcamClassId((prev) => (prev === classId ? null : classId));
   }, []);
 
   const canCollect = mobilenetStatus === 'ready' && webcamStatus === 'ready' && !isTraining;
@@ -361,7 +368,7 @@ export default function ImageClassification() {
       }
     }
 
-    if (!isWebcamEnabled) {
+    if (!shouldEnableWebcam) {
       if (captureIntervalRef.current) {
         window.clearInterval(captureIntervalRef.current);
         captureIntervalRef.current = null;
@@ -393,7 +400,7 @@ export default function ImageClassification() {
       streamRef.current = null;
       if (stream) stream.getTracks().forEach((track) => track.stop());
     };
-  }, [isWebcamEnabled]);
+  }, [shouldEnableWebcam]);
 
   useEffect(() => {
     return () => {
@@ -461,6 +468,10 @@ export default function ImageClassification() {
     stopCollecting();
   }, [activeStep, stopCollecting]);
 
+  useEffect(() => {
+    stopCollecting();
+  }, [activeWebcamClassId, stopCollecting]);
+
   const startCollecting = useCallback(
     (classIndex) => {
       if (!canCollect) return;
@@ -485,14 +496,16 @@ export default function ImageClassification() {
   );
 
   const addClass = useCallback(() => {
-    setClasses((prev) => [...prev, makeDefaultClass(prev.length)]);
+    const nextClass = makeDefaultClass(classes.length);
+    setClasses((prev) => [...prev, nextClass]);
+    setActiveWebcamClassId(nextClass.id);
     setIsTrained(false);
 
     if (transferModelRef.current) {
       transferModelRef.current.dispose();
       transferModelRef.current = null;
     }
-  }, []);
+  }, [classes.length]);
 
   const handleTrain = useCallback(async () => {
     if (!canTrain) return;
@@ -670,8 +683,8 @@ export default function ImageClassification() {
                   isCollecting={collectingClassIndex === index}
                   stream={stream}
                   canCollect={canCollect}
-                  isWebcamEnabled={isWebcamEnabled}
-                  onToggleWebcam={toggleWebcam}
+                  isWebcamEnabled={activeWebcamClassId === cls.id}
+                  onToggleWebcam={() => toggleWebcamForClass(cls.id)}
                   onClassNameChange={(event) => {
                     const nextName = event.target.value;
                     setClasses((prev) =>
