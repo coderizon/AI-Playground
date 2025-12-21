@@ -372,100 +372,129 @@
 
 .image-classification .count-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 12px;
 }
 
-.image-classification .count-shell {
+.image-classification .count-box {
   position: relative;
-  display: inline-flex;
+  z-index: 0;
+  width: var(--webcam-frame-size);
+  max-width: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 14px 16px;
+  display: flex;
   align-items: center;
-  justify-content: flex-end;
-}
-
-.image-classification .count-particles {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translate(-50%, -70%);
-  width: 180px;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.image-classification .count-particle {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, 0);
-  font-weight: 900;
-  font-size: 14px;
-  color: #3f73ff;
-  text-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
-  animation: ic-float-up 0.5s ease-out forwards;
-  user-select: none;
-}
-
-.image-classification .count-chip {
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 14px 30px rgba(14, 22, 48, 0.06);
+  overflow: hidden;
   transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.image-classification .count-chip.recording {
-  border-color: rgba(37, 99, 235, 0.22);
-  background: rgba(37, 99, 235, 0.08);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.09);
+.image-classification .count-box.recording {
+  border-color: rgba(37, 99, 235, 0.55);
 }
 
-.image-classification .count-value {
-  display: inline-block;
+.image-classification .count-bubbles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.image-classification .count-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%) scale(0.5);
+  opacity: 0;
+  font-weight: 800;
+  font-size: 18px;
+  color: rgba(147, 197, 253, 0.9);
+  animation-name: ic-bubble-up;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  user-select: none;
+}
+
+.image-classification .count-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.image-classification .count-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.image-classification .count-label {
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(15, 23, 42, 0.78);
+}
+
+.image-classification .count-number {
+  position: relative;
+  z-index: 1;
   font-variant-numeric: tabular-nums;
-  transition: transform 120ms ease, color 120ms ease;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(15, 23, 42, 0.85);
+  transform: scale(1);
+  transform-origin: right center;
+  transition: transform 100ms ease-out, color 120ms ease;
 }
 
-.image-classification .count-chip.recording .count-value {
+.image-classification .count-box.recording .count-number {
   color: rgba(37, 99, 235, 0.95);
 }
 
-.image-classification .count-chip.bump .count-value {
-  transform: scale(1.12);
+.image-classification .count-number.bump {
+  transform: scale(1.5);
 }
 
-@keyframes ic-float-up {
+@keyframes ic-bubble-up {
   0% {
-    transform: translate(-50%, 0) scale(0.85);
     opacity: 0;
+    bottom: -30px;
+    transform: translateX(-50%) scale(0.5);
   }
-  20% {
+  10% {
     opacity: 1;
-    transform: translate(-50%, -18px) scale(1);
+    transform: translateX(-50%) scale(var(--scale, 1));
+  }
+  90% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(var(--scale, 1));
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -54px) scale(0.9);
+    bottom: 120%;
+    transform: translateX(-50%) scale(var(--scale, 1));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .image-classification .count-particle {
+  .image-classification .count-bubble {
     animation: none;
   }
 
-  .image-classification .count-chip,
-  .image-classification .count-value {
+  .image-classification .count-box,
+  .image-classification .count-number {
     transition: none;
   }
-}
-
-.image-classification .count-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: rgba(15, 23, 42, 0.04);
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(15, 23, 42, 0.75);
 }
 
 .image-classification .dashed {
@@ -576,6 +605,7 @@
 .image-classification .webcam-panel .dataCollector.block {
   width: var(--webcam-frame-size);
   margin-inline: auto;
+  box-sizing: border-box;
 }
 
 .image-classification .video-shell video {

@@ -140,13 +140,14 @@ function ClassCard({
 
   const addParticle = useCallback(() => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const randomX = Math.round(Math.random() * 60 - 30);
-    setParticles((prev) => [...prev, { id, x: randomX }]);
+    const scale = 0.8 + Math.random() * 0.4;
+    const duration = 0.8 + Math.random() * 0.4;
+    setParticles((prev) => [...prev, { id, scale, duration }]);
 
     const timeoutId = window.setTimeout(() => {
       setParticles((prev) => prev.filter((particle) => particle.id !== id));
       particleTimeoutsRef.current.delete(timeoutId);
-    }, 800);
+    }, duration * 1000);
 
     particleTimeoutsRef.current.add(timeoutId);
   }, []);
@@ -154,7 +155,7 @@ function ClassCard({
   const triggerIncrementEffect = useCallback(() => {
     setBumpAnimation(true);
     if (bumpTimeoutRef.current) window.clearTimeout(bumpTimeoutRef.current);
-    bumpTimeoutRef.current = window.setTimeout(() => setBumpAnimation(false), 120);
+    bumpTimeoutRef.current = window.setTimeout(() => setBumpAnimation(false), 100);
     addParticle();
   }, [addParticle]);
 
@@ -238,25 +239,26 @@ function ClassCard({
       ) : null}
 
       <div className="count-row">
-        <div className="count-shell">
-          <div className="count-particles" aria-hidden="true">
+        <div className={`count-box${isCollecting ? ' recording' : ''}`}>
+          <div className="count-bubbles" aria-hidden="true">
             {particles.map((particle) => (
               <div
                 key={particle.id}
-                className="count-particle"
-                style={{ left: `calc(50% + ${particle.x}px)` }}
+                className="count-bubble"
+                style={{
+                  animationDuration: `${particle.duration}s`,
+                  '--scale': `${particle.scale}`,
+                }}
               >
-                +1
+                +PNG
               </div>
             ))}
           </div>
 
-          <span
-            className={`count-chip${isCollecting ? ' recording' : ''}${bumpAnimation ? ' bump' : ''}`}
-          >
-            <span className="count-value">{exampleCount}</span>{' '}
-            {exampleCount === 1 ? 'Beispiel' : 'Beispiele'}
-          </span>
+          <div className="count-meta">
+            <span className="count-label">Anzahl Beispiele</span>
+          </div>
+          <div className={`count-number${bumpAnimation ? ' bump' : ''}`}>{exampleCount}</div>
         </div>
       </div>
     </div>
