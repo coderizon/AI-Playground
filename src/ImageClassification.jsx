@@ -403,6 +403,7 @@ export default function ImageClassification() {
   const [webcamStatus, setWebcamStatus] = useState('idle');
   const [cameraFacingMode, setCameraFacingMode] = useState('user');
   const [canSwitchCamera, setCanSwitchCamera] = useState(false);
+  const [pendingExampleCount, setPendingExampleCount] = useState(0);
 
   const [isTraining, setIsTraining] = useState(false);
   const [trainingPercent, setTrainingPercent] = useState(0);
@@ -414,6 +415,9 @@ export default function ImageClassification() {
   const mobilenetOutputDimRef = useRef(1024);
   const trainingInputsRef = useRef([]);
   const trainingLabelsRef = useRef([]);
+  const pendingExamplesRef = useRef([]);
+  const captureCanvasRef = useRef(null);
+  const captureCanvasContextRef = useRef(null);
   const transferModelRef = useRef(null);
   const captureVideoRef = useRef(null);
   const streamRef = useRef(null);
@@ -439,15 +443,17 @@ export default function ImageClassification() {
     setActiveWebcamClassId((prev) => (prev === classId ? null : classId));
   }, []);
 
-  const canCollect = mobilenetStatus === 'ready' && webcamStatus === 'ready' && !isTraining;
+  const canCollect = mobilenetStatus !== 'error' && webcamStatus === 'ready' && !isTraining;
 
   const canTrain = useMemo(() => {
     if (isTraining) return false;
+    if (mobilenetStatus !== 'ready') return false;
+    if (pendingExampleCount > 0) return false;
     if (classes.length < 2) return false;
 
     const hasExamples = classes.every((cls) => cls.exampleCount > 0);
     return hasExamples;
-  }, [classes, isTraining]);
+  }, [classes, isTraining, mobilenetStatus, pendingExampleCount]);
 
   useEffect(() => {
     let cancelled = false;
@@ -468,6 +474,22 @@ export default function ImageClassification() {
 
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!captureCanvasRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = MOBILENET_IMAGE_SIZE;
+      canvas.height = MOBILENET_IMAGE_SIZE;
+      captureCanvasRef.current = canvas;
+      captureCanvasContextRef.current = canvas.getContext('2d', { willReadFrequently: true });
+    }
+
+    return () => {
+      captureCanvasRef.current = null;
+      captureCanvasContextRef.current = null;
+      pendingExamplesRef.current = [];
     };
   }, []);
 
@@ -598,29 +620,98 @@ export default function ImageClassification() {
     });
   }, [classes.length, probabilities.length]);
 
-  const collectExample = useCallback(
-    (classIndex) => {
-      const mobilenet = mobilenetRef.current;
-      const videoEl = captureVideoRef.current;
+  const captureExampleFrame = useCallback((videoEl) => {
+    let ctx = captureCanvasContextRef.current;
+    if (!ctx) {
+      if (typeof document === 'undefined') return null;
+      const canvas = document.createElement('canvas');
+      canvas.width = MOBILENET_IMAGE_SIZE;
+      canvas.height = MOBILENET_IMAGE_SIZE;
+      captureCanvasRef.current = canvas;
+      ctx = canvas.getContext('2d', { willReadFrequently: true });
+      captureCanvasContextRef.current = ctx;
+    }
+    if (!ctx) return null;
 
-      if (!mobilenet || !videoEl) return;
-      if (videoEl.readyState < 2) return;
+    try {
+      ctx.drawImage(videoEl, 0, 0, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE);
+      return ctx.getImageData(0, 0, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE);
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }, []);
 
+  const flushPendingExamples = useCallback(async () => {
+    const mobilenet = mobilenetRef.current;
+    if (!mobilenet) return;
+
+    const pending = pendingExamplesRef.current;
+    if (!pending.length) return;
+
+    pendingExamplesRef.current = [];
+    setPendingExampleCount(pending.length);
+
+    for (const { classIndex, imageData } of pending) {
       const features = tf.tidy(() => {
-        const image = tf.browser.fromPixels(videoEl);
-        const resized = tf.image.resizeBilinear(image, [MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE], true);
-        const normalized = resized.toFloat().div(255);
-        const batched = normalized.expandDims(0);
+        const image = tf.browser.fromPixels(imageData);
+        const normalized = image.toFloat().div(255).expandDims(0);
 
-        const activation = mobilenet.predict(batched);
+        const activation = mobilenet.predict(normalized);
         const activationTensor = Array.isArray(activation) ? activation[0] : activation;
 
         return activationTensor.squeeze();
       });
 
-      if (!features) return;
       trainingInputsRef.current.push(features);
       trainingLabelsRef.current.push(classIndex);
+
+      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+    }
+
+    setPendingExampleCount(0);
+  }, []);
+
+  useEffect(() => {
+    if (mobilenetStatus !== 'ready') return;
+    void flushPendingExamples();
+  }, [mobilenetStatus, flushPendingExamples]);
+
+  const collectExample = useCallback(
+    (classIndex) => {
+      const videoEl = captureVideoRef.current;
+
+      if (!videoEl) return;
+      if (videoEl.readyState < 2) return;
+
+      const mobilenet = mobilenetRef.current;
+
+      if (!mobilenet) {
+        const imageData = captureExampleFrame(videoEl);
+        if (!imageData) return;
+        pendingExamplesRef.current.push({ classIndex, imageData });
+        setPendingExampleCount(pendingExamplesRef.current.length);
+      } else {
+        const features = tf.tidy(() => {
+          const image = tf.browser.fromPixels(videoEl);
+          const resized = tf.image.resizeBilinear(
+            image,
+            [MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE],
+            true,
+          );
+          const normalized = resized.toFloat().div(255);
+          const batched = normalized.expandDims(0);
+
+          const activation = mobilenet.predict(batched);
+          const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+
+          return activationTensor.squeeze();
+        });
+
+        if (!features) return;
+        trainingInputsRef.current.push(features);
+        trainingLabelsRef.current.push(classIndex);
+      }
 
       setClasses((prev) =>
         prev.map((cls, index) =>
@@ -628,7 +719,7 @@ export default function ImageClassification() {
         ),
       );
     },
-    [setClasses],
+    [captureExampleFrame],
   );
 
   const stopCollecting = useCallback(() => {
@@ -686,6 +777,7 @@ export default function ImageClassification() {
     if (!canTrain) return;
 
     stopCollecting();
+    await flushPendingExamples();
     setIsTraining(true);
     setTrainingPercent(0);
     setIsTrained(false);
@@ -743,7 +835,7 @@ export default function ImageClassification() {
       if (ys) ys.dispose();
       if (labelTensor) labelTensor.dispose();
     }
-  }, [batchSize, canTrain, classes.length, epochs, learningRate, stopCollecting]);
+  }, [batchSize, canTrain, classes.length, epochs, flushPendingExamples, learningRate, stopCollecting]);
 
   useEffect(() => {
     if (activeStep !== 'test') return;
