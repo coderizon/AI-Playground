@@ -10,6 +10,28 @@ const MOBILENET_URL =
 const MOBILENET_IMAGE_SIZE = 224;
 const CAPTURE_INTERVAL_MS = 200;
 
+const CLASS_COLORS = [
+  '#3f73ff', // blue
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#a855f7', // violet
+  '#ef4444', // red
+  '#14b8a6', // teal
+  '#e11d48', // rose
+  '#6366f1', // indigo
+  '#84cc16', // lime
+  '#0ea5e9', // sky
+  '#f97316', // orange
+  '#8b5cf6', // purple
+];
+
+function getClassColor(index) {
+  if (index < CLASS_COLORS.length) return CLASS_COLORS[index];
+
+  const hue = Math.round((index * 137.508) % 360);
+  return `hsl(${hue} 82% 55%)`;
+}
+
 let mobilenetPromise = null;
 
 async function loadMobileNetOnce() {
@@ -230,6 +252,7 @@ function PreviewPanel({ stream, classes, probabilities }) {
             {classes.map((cls, index) => {
               const probability = probabilities[index] ?? 0;
               const percent = Math.round(probability * 100);
+              const color = getClassColor(index);
 
               return (
                 <div key={cls.id} className="probability-row">
@@ -244,7 +267,10 @@ function PreviewPanel({ stream, classes, probabilities }) {
                     aria-valuemax={100}
                     aria-valuenow={percent}
                   >
-                    <div className="probability-bar-fill" style={{ width: `${percent}%` }} />
+                    <div
+                      className="probability-bar-fill"
+                      style={{ width: `${percent}%`, backgroundColor: color }}
+                    />
                   </div>
                 </div>
               );
