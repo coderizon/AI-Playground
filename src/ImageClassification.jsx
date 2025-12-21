@@ -395,8 +395,8 @@ export default function ImageClassification() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [activeStep, setActiveStep] = useState('data');
   const [activeWebcamClassId, setActiveWebcamClassId] = useState(() => initialClass.id);
-  const [epochs, setEpochs] = useState(10);
-  const [batchSize, setBatchSize] = useState(5);
+  const [epochs, setEpochs] = useState(50);
+  const [batchSize, setBatchSize] = useState(15);
   const [learningRate, setLearningRate] = useState(0.001);
 
   const [mobilenetStatus, setMobilenetStatus] = useState('loading');
