@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as tf from '@tensorflow/tfjs';
+import { Video, X } from 'lucide-react';
 
 import './ImageClassification.css';
 
@@ -96,38 +97,54 @@ function ClassCard({
   onCollectStart,
   onCollectStop,
   canCollect,
+  isWebcamEnabled,
+  onToggleWebcam,
 }) {
   return (
     <div className="card class-card">
       <div className="card-header">
         <input className="class-name-input" value={classNameValue} onChange={onClassNameChange} />
-        <span className="dots" aria-hidden="true">
-          ⋮
-        </span>
-      </div>
-
-      <div className="webcam-panel visible">
-        <div className="capture-slot">
-          <StreamVideo stream={stream} />
+        <div className="class-card-actions">
+          <button
+            className="ic-webcam-toggle"
+            type="button"
+            aria-label={isWebcamEnabled ? 'Webcam schließen' : 'Webcam öffnen'}
+            aria-pressed={isWebcamEnabled}
+            onClick={onToggleWebcam}
+          >
+            <Video className="ic-webcam-icon" aria-hidden="true" />
+            {isWebcamEnabled ? <X className="ic-webcam-x" aria-hidden="true" /> : null}
+          </button>
+          <span className="dots" aria-hidden="true">
+            ⋮
+          </span>
         </div>
-
-        <button
-          className="dataCollector primary block"
-          type="button"
-          disabled={!canCollect}
-          aria-pressed={isCollecting}
-          onPointerDown={(event) => {
-            if (!canCollect) return;
-            event.currentTarget.setPointerCapture(event.pointerId);
-            onCollectStart();
-          }}
-          onPointerUp={onCollectStop}
-          onPointerCancel={onCollectStop}
-          onLostPointerCapture={onCollectStop}
-        >
-          Zum Aufnehmen halten
-        </button>
       </div>
+
+      {isWebcamEnabled ? (
+        <div className="webcam-panel visible">
+          <div className="capture-slot">
+            <StreamVideo stream={stream} />
+          </div>
+
+          <button
+            className="dataCollector primary block"
+            type="button"
+            disabled={!canCollect}
+            aria-pressed={isCollecting}
+            onPointerDown={(event) => {
+              if (!canCollect) return;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              onCollectStart();
+            }}
+            onPointerUp={onCollectStop}
+            onPointerCancel={onCollectStop}
+            onLostPointerCapture={onCollectStop}
+          >
+            Zum Aufnehmen halten
+          </button>
+        </div>
+      ) : null}
 
       <div className="count-row">
         <span className="count-chip">
@@ -251,6 +268,7 @@ export default function ImageClassification() {
   const [classes, setClasses] = useState(() => [makeDefaultClass(0)]);
 
   const [activeStep, setActiveStep] = useState('data');
+  const [isWebcamEnabled, setIsWebcamEnabled] = useState(true);
   const [epochs, setEpochs] = useState(10);
   const [batchSize, setBatchSize] = useState(5);
   const [learningRate, setLearningRate] = useState(0.001);
@@ -276,6 +294,10 @@ export default function ImageClassification() {
   const lastPredictionUpdateRef = useRef(0);
 
   const stream = streamRef.current;
+
+  const toggleWebcam = useCallback(() => {
+    setIsWebcamEnabled((prev) => !prev);
+  }, []);
 
   const canCollect = mobilenetStatus === 'ready' && webcamStatus === 'ready' && !isTraining;
 
@@ -339,6 +361,19 @@ export default function ImageClassification() {
       }
     }
 
+    if (!isWebcamEnabled) {
+      if (captureIntervalRef.current) {
+        window.clearInterval(captureIntervalRef.current);
+        captureIntervalRef.current = null;
+      }
+
+      setCollectingClassIndex(null);
+      setWebcamStatus('disabled');
+      return () => {
+        cancelled = true;
+      };
+    }
+
     startWebcam();
 
     return () => {
@@ -358,7 +393,7 @@ export default function ImageClassification() {
       streamRef.current = null;
       if (stream) stream.getTracks().forEach((track) => track.stop());
     };
-  }, []);
+  }, [isWebcamEnabled]);
 
   useEffect(() => {
     return () => {
@@ -635,6 +670,8 @@ export default function ImageClassification() {
                   isCollecting={collectingClassIndex === index}
                   stream={stream}
                   canCollect={canCollect}
+                  isWebcamEnabled={isWebcamEnabled}
+                  onToggleWebcam={toggleWebcam}
                   onClassNameChange={(event) => {
                     const nextName = event.target.value;
                     setClasses((prev) =>

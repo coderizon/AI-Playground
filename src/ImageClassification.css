@@ -210,6 +210,55 @@
   user-select: none;
 }
 
+.image-classification .class-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.image-classification .ic-webcam-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(37, 99, 235, 0.12);
+  color: rgba(37, 99, 235, 0.9);
+  display: grid;
+  place-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.image-classification .ic-webcam-toggle:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.16);
+}
+
+.image-classification .ic-webcam-toggle:active {
+  transform: translateY(0);
+}
+
+.image-classification .ic-webcam-toggle:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
+.image-classification .ic-webcam-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.image-classification .ic-webcam-x {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  color: rgba(15, 23, 42, 0.9);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+  padding: 2px;
+}
+
 .image-classification .classes-column {
   display: flex;
   flex-direction: column;
