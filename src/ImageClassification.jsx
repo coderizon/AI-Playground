@@ -84,6 +84,10 @@ function createTransferModel({ inputDim, numClasses, learningRate }) {
   return model;
 }
 
+function getDefaultClassName(index) {
+  return `Klasse ${index + 1}`;
+}
+
 const StreamVideo = forwardRef(function StreamVideo(
   { stream, className, ...props },
   forwardedRef,
@@ -117,6 +121,8 @@ function ClassCard({
   isCollecting,
   stream,
   onClassNameChange,
+  onClassNameFocus,
+  onClassNameBlur,
   onCollectStart,
   onCollectStop,
   canCollect,
@@ -126,7 +132,13 @@ function ClassCard({
   return (
     <div className="card class-card">
       <div className="card-header">
-        <input className="class-name-input" value={classNameValue} onChange={onClassNameChange} />
+        <input
+          className="class-name-input"
+          value={classNameValue}
+          onChange={onClassNameChange}
+          onFocus={onClassNameFocus}
+          onBlur={onClassNameBlur}
+        />
         <div className="class-card-actions">
           <button
             className="ic-webcam-toggle"
@@ -286,7 +298,7 @@ function PreviewPanel({ stream, classes, probabilities }) {
 function makeDefaultClass(index) {
   return {
     id: `class-${Date.now()}-${Math.random().toString(16).slice(2)}-${index}`,
-    name: `Class ${index + 1}`,
+    name: getDefaultClassName(index),
     exampleCount: 0,
   };
 }
@@ -731,6 +743,30 @@ export default function ImageClassification() {
                       prev.map((item, itemIndex) =>
                         itemIndex === index ? { ...item, name: nextName } : item,
                       ),
+                    );
+                  }}
+                  onClassNameFocus={() => {
+                    const defaultName = getDefaultClassName(index);
+                    const legacyDefaultName = `Class ${index + 1}`;
+
+                    setClasses((prev) =>
+                      prev.map((item, itemIndex) => {
+                        if (itemIndex !== index) return item;
+                        if (item.name !== defaultName && item.name !== legacyDefaultName) return item;
+                        return { ...item, name: '' };
+                      }),
+                    );
+                  }}
+                  onClassNameBlur={() => {
+                    const defaultName = getDefaultClassName(index);
+
+                    setClasses((prev) =>
+                      prev.map((item, itemIndex) => {
+                        if (itemIndex !== index) return item;
+
+                        const nextName = item.name.trim();
+                        return { ...item, name: nextName.length ? nextName : defaultName };
+                      }),
                     );
                   }}
                   onCollectStart={() => startCollecting(index)}
