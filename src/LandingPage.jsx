@@ -1,5 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
+import NavigationDrawer from './NavigationDrawer.jsx';
 import './LandingPage.css';
 
 const MODELS = [
@@ -95,9 +98,12 @@ const MODELS = [
   },
 ];
 
-export default function LandingPage({ onSelectModel }) {
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
   const handleMenuClick = useCallback(() => {
-    console.log('[Landing] menu');
+    setIsNavOpen((prev) => !prev);
   }, []);
 
   const handleSearchClick = useCallback(() => {
@@ -106,14 +112,14 @@ export default function LandingPage({ onSelectModel }) {
 
   const handleCardActivate = useCallback(
     (model) => {
-      if (typeof onSelectModel === 'function') {
-        onSelectModel(model);
+      if (model?.id === 'bildklassifikation') {
+        navigate('/image-classification');
         return;
       }
 
       console.log('[Landing] card', model);
     },
-    [onSelectModel],
+    [navigate],
   );
 
   const handleCardKeyDown = useCallback(
@@ -127,11 +133,18 @@ export default function LandingPage({ onSelectModel }) {
 
   return (
     <div id="landing-page" role="dialog" aria-label="Landing">
+      <NavigationDrawer
+        open={isNavOpen}
+        onClose={() => setIsNavOpen(false)}
+        drawerId="navigation-drawer"
+      />
       <div className="landing-shell">
         <header className="landing-header">
           <button
             className="icon-button landing-menu nav-toggle"
-            aria-label="Menü öffnen"
+            aria-label={isNavOpen ? 'Menü schließen' : 'Menü öffnen'}
+            aria-controls="navigation-drawer"
+            aria-expanded={isNavOpen}
             type="button"
             onClick={handleMenuClick}
           >

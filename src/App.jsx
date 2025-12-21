@@ -1,23 +1,14 @@
-import { useCallback, useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import ImageClassification from './ImageClassification.jsx';
 import LandingPage from './LandingPage.jsx';
 
 export default function App() {
-  const [activeView, setActiveView] = useState('landing');
-
-  const handleSelectModel = useCallback((model) => {
-    if (model?.id === 'bildklassifikation') {
-      setActiveView('bildklassifikation');
-      return;
-    }
-
-    console.log('[App] Unimplemented model', model);
-  }, []);
-
-  if (activeView === 'bildklassifikation') {
-    return <ImageClassification />;
-  }
-
-  return <LandingPage onSelectModel={handleSelectModel} />;
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/image-classification" element={<ImageClassification />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }

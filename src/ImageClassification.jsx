@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'r
 import * as tf from '@tensorflow/tfjs';
 import { Video, X } from 'lucide-react';
 
+import NavigationDrawer from './NavigationDrawer.jsx';
 import './ImageClassification.css';
 
 const MOBILENET_URL =
@@ -294,6 +295,7 @@ export default function ImageClassification() {
   const initialClass = useMemo(() => makeDefaultClass(0), []);
   const [classes, setClasses] = useState(() => [initialClass]);
 
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const [activeStep, setActiveStep] = useState('data');
   const [activeWebcamClassId, setActiveWebcamClassId] = useState(() => initialClass.id);
   const [epochs, setEpochs] = useState(10);
@@ -656,11 +658,23 @@ export default function ImageClassification() {
 
   return (
     <div className="image-classification">
+      <NavigationDrawer
+        open={isNavOpen}
+        onClose={() => setIsNavOpen(false)}
+        drawerId="navigation-drawer"
+      />
       <StreamVideo ref={captureVideoRef} stream={stream} className="ic-hidden-video" />
 
       <div className="ic-shell">
         <header className="ic-topbar">
-          <button className="ic-menu" type="button" aria-label="Menü">
+          <button
+            className="ic-menu"
+            type="button"
+            aria-label={isNavOpen ? 'Menü schließen' : 'Menü öffnen'}
+            aria-controls="navigation-drawer"
+            aria-expanded={isNavOpen}
+            onClick={() => setIsNavOpen((prev) => !prev)}
+          >
             <span className="ic-menu-lines" />
           </button>
           <div className="ic-title" aria-label="Bildklassifikation">
