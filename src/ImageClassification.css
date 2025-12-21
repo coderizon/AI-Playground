@@ -282,14 +282,58 @@
   aspect-ratio: 1 / 1;
   width: var(--webcam-frame-size);
   margin-inline: auto;
+  position: relative;
 }
 
 .image-classification .capture-slot video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1);
   display: block;
+}
+
+.image-classification .capture-slot.mirrored video {
+  transform: scaleX(-1);
+}
+
+.image-classification .ic-camera-switch {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(15, 17, 21, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.image-classification .ic-camera-switch:hover {
+  background: rgba(15, 17, 21, 0.7);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.image-classification .ic-camera-switch:active {
+  transform: translateY(0);
+}
+
+.image-classification .ic-camera-switch:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+.image-classification .ic-camera-switch svg {
+  width: 20px;
+  height: 20px;
 }
 
 .image-classification .primary {
@@ -330,6 +374,86 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
+}
+
+.image-classification .count-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.image-classification .count-particles {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -70%);
+  width: 180px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.image-classification .count-particle {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  font-weight: 900;
+  font-size: 14px;
+  color: #3f73ff;
+  text-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+  animation: ic-float-up 0.5s ease-out forwards;
+  user-select: none;
+}
+
+.image-classification .count-chip {
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.image-classification .count-chip.recording {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.09);
+}
+
+.image-classification .count-value {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: transform 120ms ease, color 120ms ease;
+}
+
+.image-classification .count-chip.recording .count-value {
+  color: rgba(37, 99, 235, 0.95);
+}
+
+.image-classification .count-chip.bump .count-value {
+  transform: scale(1.12);
+}
+
+@keyframes ic-float-up {
+  0% {
+    transform: translate(-50%, 0) scale(0.85);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -18px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -54px) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-classification .count-particle {
+    animation: none;
+  }
+
+  .image-classification .count-chip,
+  .image-classification .count-value {
+    transition: none;
+  }
 }
 
 .image-classification .count-chip {
@@ -446,6 +570,7 @@
   aspect-ratio: 1 / 1;
   width: var(--webcam-frame-size);
   margin-inline: auto;
+  position: relative;
 }
 
 .image-classification .webcam-panel .dataCollector.block {
@@ -457,8 +582,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1);
   display: block;
+}
+
+.image-classification .video-shell.mirrored video {
+  transform: scaleX(-1);
 }
 
 .image-classification .preview-output-header {

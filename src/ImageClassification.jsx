@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as tf from '@tensorflow/tfjs';
-import { Video, X } from 'lucide-react';
+import { SwitchCamera, Video, X } from 'lucide-react';
 
 import NavigationDrawer from './NavigationDrawer.jsx';
 import './ImageClassification.css';
@@ -120,6 +120,9 @@ function ClassCard({
   exampleCount,
   isCollecting,
   stream,
+  showCameraSwitch,
+  isMirrored,
+  onToggleCamera,
   onClassNameChange,
   onClassNameFocus,
   onClassNameBlur,
@@ -129,6 +132,49 @@ function ClassCard({
   isWebcamEnabled,
   onToggleWebcam,
 }) {
+  const [particles, setParticles] = useState([]);
+  const [bumpAnimation, setBumpAnimation] = useState(false);
+  const bumpTimeoutRef = useRef(null);
+  const particleTimeoutsRef = useRef(new Set());
+  const previousExampleCountRef = useRef(exampleCount);
+
+  const addParticle = useCallback(() => {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const randomX = Math.round(Math.random() * 60 - 30);
+    setParticles((prev) => [...prev, { id, x: randomX }]);
+
+    const timeoutId = window.setTimeout(() => {
+      setParticles((prev) => prev.filter((particle) => particle.id !== id));
+      particleTimeoutsRef.current.delete(timeoutId);
+    }, 800);
+
+    particleTimeoutsRef.current.add(timeoutId);
+  }, []);
+
+  const triggerIncrementEffect = useCallback(() => {
+    setBumpAnimation(true);
+    if (bumpTimeoutRef.current) window.clearTimeout(bumpTimeoutRef.current);
+    bumpTimeoutRef.current = window.setTimeout(() => setBumpAnimation(false), 120);
+    addParticle();
+  }, [addParticle]);
+
+  useEffect(() => {
+    if (exampleCount > previousExampleCountRef.current) {
+      triggerIncrementEffect();
+    }
+    previousExampleCountRef.current = exampleCount;
+  }, [exampleCount, triggerIncrementEffect]);
+
+  useEffect(() => {
+    return () => {
+      if (bumpTimeoutRef.current) window.clearTimeout(bumpTimeoutRef.current);
+      for (const timeoutId of particleTimeoutsRef.current) {
+        window.clearTimeout(timeoutId);
+      }
+      particleTimeoutsRef.current.clear();
+    };
+  }, []);
+
   return (
     <div className="card class-card">
       <div className="card-header">
@@ -158,8 +204,18 @@ function ClassCard({
 
       {isWebcamEnabled ? (
         <div className="webcam-panel visible">
-          <div className="capture-slot">
+          <div className={`capture-slot${isMirrored ? ' mirrored' : ''}`}>
             <StreamVideo stream={stream} />
+            {showCameraSwitch ? (
+              <button
+                className="ic-camera-switch"
+                type="button"
+                onClick={onToggleCamera}
+                aria-label="Kamera wechseln"
+              >
+                <SwitchCamera aria-hidden="true" />
+              </button>
+            ) : null}
           </div>
 
           <button
@@ -182,9 +238,26 @@ function ClassCard({
       ) : null}
 
       <div className="count-row">
-        <span className="count-chip">
-          {exampleCount} {exampleCount === 1 ? 'Beispiel' : 'Beispiele'}
-        </span>
+        <div className="count-shell">
+          <div className="count-particles" aria-hidden="true">
+            {particles.map((particle) => (
+              <div
+                key={particle.id}
+                className="count-particle"
+                style={{ left: `calc(50% + ${particle.x}px)` }}
+              >
+                +1
+              </div>
+            ))}
+          </div>
+
+          <span
+            className={`count-chip${isCollecting ? ' recording' : ''}${bumpAnimation ? ' bump' : ''}`}
+          >
+            <span className="count-value">{exampleCount}</span>{' '}
+            {exampleCount === 1 ? 'Beispiel' : 'Beispiele'}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -248,12 +321,22 @@ function TrainingPanel({
   );
 }
 
-function PreviewPanel({ stream, classes, probabilities }) {
+function PreviewPanel({ stream, classes, probabilities, showCameraSwitch, isMirrored, onToggleCamera }) {
   return (
     <div className="card preview-card">
       <div className="preview-body">
-        <div className="video-shell">
+        <div className={`video-shell${isMirrored ? ' mirrored' : ''}`}>
           <StreamVideo stream={stream} />
+          {showCameraSwitch ? (
+            <button
+              className="ic-camera-switch"
+              type="button"
+              onClick={onToggleCamera}
+              aria-label="Kamera wechseln"
+            >
+              <SwitchCamera aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
 
         <div className="preview-output">
@@ -316,6 +399,8 @@ export default function ImageClassification() {
 
   const [mobilenetStatus, setMobilenetStatus] = useState('loading');
   const [webcamStatus, setWebcamStatus] = useState('idle');
+  const [cameraFacingMode, setCameraFacingMode] = useState('user');
+  const [canSwitchCamera, setCanSwitchCamera] = useState(false);
 
   const [isTraining, setIsTraining] = useState(false);
   const [trainingPercent, setTrainingPercent] = useState(0);
@@ -335,6 +420,12 @@ export default function ImageClassification() {
   const lastPredictionUpdateRef = useRef(0);
 
   const stream = streamRef.current;
+  const isMirrored = cameraFacingMode === 'user';
+  const showCameraSwitch = webcamStatus === 'ready' && canSwitchCamera;
+
+  const toggleCameraFacingMode = useCallback(() => {
+    setCameraFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
+  }, []);
 
   const shouldEnableWebcam = useMemo(() => {
     if (activeStep === 'train') return false;
@@ -392,7 +483,7 @@ export default function ImageClassification() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: false,
-          video: { facingMode: 'user' },
+          video: { facingMode: cameraFacingMode },
         });
 
         if (cancelled) {
@@ -404,6 +495,10 @@ export default function ImageClassification() {
         setWebcamStatus('ready');
       } catch (error) {
         console.error(error);
+        if (!cancelled && cameraFacingMode === 'environment') {
+          setCameraFacingMode('user');
+          return;
+        }
         setWebcamStatus('error');
       }
     }
@@ -440,7 +535,45 @@ export default function ImageClassification() {
       streamRef.current = null;
       if (stream) stream.getTracks().forEach((track) => track.stop());
     };
-  }, [shouldEnableWebcam]);
+  }, [cameraFacingMode, shouldEnableWebcam]);
+
+  useEffect(() => {
+    if (webcamStatus !== 'ready') {
+      setCanSwitchCamera(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const update = async () => {
+      if (!navigator?.mediaDevices?.enumerateDevices) {
+        setCanSwitchCamera(false);
+        return;
+      }
+
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (cancelled) return;
+
+        const videoInputs = devices.filter((device) => device.kind === 'videoinput');
+        const uniqueIds = new Set(videoInputs.map((device) => device.deviceId).filter(Boolean));
+        const count = uniqueIds.size || videoInputs.length;
+        setCanSwitchCamera(count > 1);
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) setCanSwitchCamera(false);
+      }
+    };
+
+    update();
+
+    navigator.mediaDevices?.addEventListener?.('devicechange', update);
+
+    return () => {
+      cancelled = true;
+      navigator.mediaDevices?.removeEventListener?.('devicechange', update);
+    };
+  }, [webcamStatus]);
 
   useEffect(() => {
     return () => {
@@ -734,6 +867,9 @@ export default function ImageClassification() {
                   exampleCount={cls.exampleCount}
                   isCollecting={collectingClassIndex === index}
                   stream={stream}
+                  showCameraSwitch={showCameraSwitch}
+                  isMirrored={isMirrored}
+                  onToggleCamera={toggleCameraFacingMode}
                   canCollect={canCollect}
                   isWebcamEnabled={activeWebcamClassId === cls.id}
                   onToggleWebcam={() => toggleWebcamForClass(cls.id)}
@@ -818,7 +954,14 @@ export default function ImageClassification() {
 
           {activeStep === 'test' ? (
             <section className="preview-column">
-              <PreviewPanel stream={stream} classes={classes} probabilities={probabilities} />
+              <PreviewPanel
+                stream={stream}
+                classes={classes}
+                probabilities={probabilities}
+                showCameraSwitch={showCameraSwitch}
+                isMirrored={isMirrored}
+                onToggleCamera={toggleCameraFacingMode}
+              />
             </section>
           ) : null}
         </main>
