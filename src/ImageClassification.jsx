@@ -10,6 +10,7 @@ const MOBILENET_URL =
   'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1';
 const MOBILENET_IMAGE_SIZE = 224;
 const CAPTURE_INTERVAL_MS = 200;
+const CAMERA_IDEAL_SIZE = 720;
 
 const CLASS_COLORS = [
   '#3f73ff', // blue
@@ -88,6 +89,40 @@ function getDefaultClassName(index) {
   return `Klasse ${index + 1}`;
 }
 
+function buildVideoConstraints(facingMode) {
+  const supported = navigator?.mediaDevices?.getSupportedConstraints?.() ?? {};
+  return {
+    facingMode,
+    ...(supported.width ? { width: { ideal: CAMERA_IDEAL_SIZE } } : {}),
+    ...(supported.height ? { height: { ideal: CAMERA_IDEAL_SIZE } } : {}),
+    ...(supported.aspectRatio ? { aspectRatio: { ideal: 1 } } : {}),
+    ...(supported.frameRate ? { frameRate: { ideal: 30, max: 30 } } : {}),
+  };
+}
+
+function drawSquareFrame(videoEl, ctx) {
+  const width = videoEl?.videoWidth ?? 0;
+  const height = videoEl?.videoHeight ?? 0;
+  if (!width || !height) return false;
+
+  const size = Math.min(width, height);
+  const sx = Math.max(0, Math.floor((width - size) / 2));
+  const sy = Math.max(0, Math.floor((height - size) / 2));
+
+  ctx.drawImage(
+    videoEl,
+    sx,
+    sy,
+    size,
+    size,
+    0,
+    0,
+    MOBILENET_IMAGE_SIZE,
+    MOBILENET_IMAGE_SIZE,
+  );
+  return true;
+}
+
 const StreamVideo = forwardRef(function StreamVideo(
   { stream, className, ...props },
   forwardedRef,
@@ -130,6 +165,7 @@ function ClassCard({
   onCollectStop,
   canCollect,
   isWebcamEnabled,
+  captureRef,
   onToggleWebcam,
 }) {
   const [particles, setParticles] = useState([]);
@@ -206,7 +242,7 @@ function ClassCard({
       {isWebcamEnabled ? (
         <div className="webcam-panel visible">
           <div className={`capture-slot${isMirrored ? ' mirrored' : ''}`}>
-            <StreamVideo stream={stream} />
+            <StreamVideo ref={captureRef} stream={stream} />
             {showCameraSwitch ? (
               <button
                 className="ic-camera-switch"
@@ -323,12 +359,20 @@ function TrainingPanel({
   );
 }
 
-function PreviewPanel({ stream, classes, probabilities, showCameraSwitch, isMirrored, onToggleCamera }) {
+function PreviewPanel({
+  stream,
+  classes,
+  probabilities,
+  showCameraSwitch,
+  isMirrored,
+  onToggleCamera,
+  captureRef,
+}) {
   return (
     <div className="card preview-card">
       <div className="preview-body">
         <div className={`video-shell${isMirrored ? ' mirrored' : ''}`}>
-          <StreamVideo stream={stream} />
+          <StreamVideo ref={captureRef} stream={stream} />
           {showCameraSwitch ? (
             <button
               className="ic-camera-switch"
@@ -505,10 +549,26 @@ export default function ImageClassification() {
       setWebcamStatus('loading');
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: cameraFacingMode },
-        });
+        let stream = null;
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: buildVideoConstraints(cameraFacingMode),
+          });
+        } catch (error) {
+          if (
+            error?.name === 'OverconstrainedError' ||
+            error?.name === 'ConstraintNotSatisfiedError'
+          ) {
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: { facingMode: cameraFacingMode },
+            });
+          } else {
+            throw error;
+          }
+        }
 
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
@@ -620,27 +680,42 @@ export default function ImageClassification() {
     });
   }, [classes.length, probabilities.length]);
 
-  const captureExampleFrame = useCallback((videoEl) => {
+  const drawVideoToCaptureCanvas = useCallback((videoEl) => {
+    if (!videoEl) return null;
+
+    let canvas = captureCanvasRef.current;
     let ctx = captureCanvasContextRef.current;
-    if (!ctx) {
+
+    if (!canvas) {
       if (typeof document === 'undefined') return null;
-      const canvas = document.createElement('canvas');
+      canvas = document.createElement('canvas');
       canvas.width = MOBILENET_IMAGE_SIZE;
       canvas.height = MOBILENET_IMAGE_SIZE;
       captureCanvasRef.current = canvas;
+    }
+
+    if (!ctx && canvas) {
       ctx = canvas.getContext('2d', { willReadFrequently: true });
       captureCanvasContextRef.current = ctx;
     }
+
     if (!ctx) return null;
+    if (!drawSquareFrame(videoEl, ctx)) return null;
+
+    return { canvas, ctx };
+  }, []);
+
+  const captureExampleFrame = useCallback((videoEl) => {
+    const capture = drawVideoToCaptureCanvas(videoEl);
+    if (!capture) return null;
 
     try {
-      ctx.drawImage(videoEl, 0, 0, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE);
-      return ctx.getImageData(0, 0, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE);
+      return capture.ctx.getImageData(0, 0, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE);
     } catch (error) {
       console.error(error);
       return null;
     }
-  }, []);
+  }, [drawVideoToCaptureCanvas]);
 
   const flushPendingExamples = useCallback(async () => {
     const mobilenet = mobilenetRef.current;
@@ -692,14 +767,12 @@ export default function ImageClassification() {
         pendingExamplesRef.current.push({ classIndex, imageData });
         setPendingExampleCount(pendingExamplesRef.current.length);
       } else {
+        const capture = drawVideoToCaptureCanvas(videoEl);
+        if (!capture) return;
+
         const features = tf.tidy(() => {
-          const image = tf.browser.fromPixels(videoEl);
-          const resized = tf.image.resizeBilinear(
-            image,
-            [MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE],
-            true,
-          );
-          const normalized = resized.toFloat().div(255);
+          const image = tf.browser.fromPixels(capture.canvas);
+          const normalized = image.toFloat().div(255);
           const batched = normalized.expandDims(0);
 
           const activation = mobilenet.predict(batched);
@@ -857,27 +930,25 @@ export default function ImageClassification() {
       if (videoEl?.readyState >= 2 && mobilenet && model) {
         const now = performance.now();
         if (now - lastPredictionUpdateRef.current > 100) {
-          const next = tf.tidy(() => {
-            const image = tf.browser.fromPixels(videoEl);
-            const resized = tf.image.resizeBilinear(
-              image,
-              [MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE],
-              true,
-            );
-            const normalized = resized.toFloat().div(255);
-            const batched = normalized.expandDims(0);
+          const capture = drawVideoToCaptureCanvas(videoEl);
+          if (capture) {
+            const next = tf.tidy(() => {
+              const image = tf.browser.fromPixels(capture.canvas);
+              const normalized = image.toFloat().div(255);
+              const batched = normalized.expandDims(0);
 
-            const activation = mobilenet.predict(batched);
-            const activationTensor = Array.isArray(activation) ? activation[0] : activation;
-            const logits = model.predict(activationTensor);
-            const logitsTensor = Array.isArray(logits) ? logits[0] : logits;
+              const activation = mobilenet.predict(batched);
+              const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+              const logits = model.predict(activationTensor);
+              const logitsTensor = Array.isArray(logits) ? logits[0] : logits;
 
-            const prediction = logitsTensor.squeeze();
-            return Array.from(prediction.dataSync());
-          });
+              const prediction = logitsTensor.squeeze();
+              return Array.from(prediction.dataSync());
+            });
 
-          setProbabilities(next);
-          lastPredictionUpdateRef.current = now;
+            setProbabilities(next);
+            lastPredictionUpdateRef.current = now;
+          }
         }
       }
 
@@ -902,7 +973,6 @@ export default function ImageClassification() {
         onClose={() => setIsNavOpen(false)}
         drawerId="navigation-drawer"
       />
-      <StreamVideo ref={captureVideoRef} stream={stream} className="ic-hidden-video" />
 
       <div className="ic-shell">
         <header className="ic-topbar">
@@ -966,6 +1036,7 @@ export default function ImageClassification() {
                   onToggleCamera={toggleCameraFacingMode}
                   canCollect={canCollect}
                   isWebcamEnabled={activeWebcamClassId === cls.id}
+                  captureRef={activeWebcamClassId === cls.id ? captureVideoRef : null}
                   onToggleWebcam={() => toggleWebcamForClass(cls.id)}
                   onClassNameChange={(event) => {
                     const nextName = event.target.value;
@@ -1055,6 +1126,7 @@ export default function ImageClassification() {
                 showCameraSwitch={showCameraSwitch}
                 isMirrored={isMirrored}
                 onToggleCamera={toggleCameraFacingMode}
+                captureRef={captureVideoRef}
               />
             </section>
           ) : null}
