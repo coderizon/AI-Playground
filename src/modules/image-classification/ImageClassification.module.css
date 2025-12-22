@@ -6,14 +6,14 @@
   --webcam-frame-size: min(360px, 100%);
 }
 
-.image-classification .ic-shell {
+.ic-shell {
   max-width: 920px;
   margin: 0 auto;
   padding: 18px 16px 34px;
   box-sizing: border-box;
 }
 
-.image-classification .ic-hidden-video {
+.ic-hidden-video {
   position: absolute;
   top: 0;
   left: 0;
@@ -23,14 +23,14 @@
   pointer-events: none;
 }
 
-.image-classification .ic-topbar {
+.ic-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.image-classification .ic-menu {
+.ic-menu {
   appearance: none;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: rgba(255, 255, 255, 0.85);
@@ -44,21 +44,21 @@
   transition: transform 120ms ease, background 120ms ease;
 }
 
-.image-classification .ic-menu:hover {
+.ic-menu:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.98);
 }
 
-.image-classification .ic-menu:active {
+.ic-menu:active {
   transform: translateY(0);
 }
 
-.image-classification .ic-menu:focus-visible {
+.ic-menu:focus-visible {
   outline: 3px solid rgba(37, 99, 235, 0.25);
   outline-offset: 2px;
 }
 
-.image-classification .ic-menu-lines {
+.ic-menu-lines {
   position: relative;
   width: 18px;
   height: 2px;
@@ -66,8 +66,8 @@
   border-radius: 999px;
 }
 
-.image-classification .ic-menu-lines::before,
-.image-classification .ic-menu-lines::after {
+.ic-menu-lines::before,
+.ic-menu-lines::after {
   content: '';
   position: absolute;
   left: 0;
@@ -77,15 +77,15 @@
   border-radius: 999px;
 }
 
-.image-classification .ic-menu-lines::before {
+.ic-menu-lines::before {
   top: -6px;
 }
 
-.image-classification .ic-menu-lines::after {
+.ic-menu-lines::after {
   top: 6px;
 }
 
-.image-classification .ic-title {
+.ic-title {
   padding: 8px 14px;
   border-radius: 12px;
   border: 1px solid rgba(37, 99, 235, 0.18);
@@ -95,14 +95,14 @@
   letter-spacing: 0.01em;
 }
 
-.image-classification .ic-steps {
+.ic-steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
 
-.image-classification .ic-step {
+.ic-step {
   width: 100%;
   display: inline-flex;
   align-items: center;
@@ -120,24 +120,24 @@
   white-space: nowrap;
 }
 
-.image-classification .ic-step:hover:not(:disabled) {
+.ic-step:hover:not(:disabled) {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 20px 50px rgba(17, 34, 68, 0.12);
 }
 
-.image-classification .ic-step:disabled {
+.ic-step:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.image-classification .ic-step.active {
+.ic-step.active {
   background: linear-gradient(135deg, #3f73ff, #2554d3);
   border-color: rgba(37, 99, 235, 0.25);
   color: #fff;
 }
 
-.image-classification .ic-step-number {
+.ic-step-number {
   width: 28px;
   height: 28px;
   border-radius: 999px;
@@ -148,26 +148,26 @@
   font-weight: 900;
 }
 
-.image-classification .ic-step.active .ic-step-number {
+.ic-step.active .ic-step-number {
   background: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
-.image-classification .ic-stage {
+.ic-stage {
   margin-top: 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.image-classification .training-column,
-.image-classification .preview-column {
+.training-column,
+.preview-column {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.image-classification .card {
+.card {
   background: #fff;
   border-radius: 14px;
   border: 1px solid #d9e0ec;
@@ -176,7 +176,7 @@
   box-sizing: border-box;
 }
 
-.image-classification .card-header {
+.card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -184,12 +184,12 @@
   margin-bottom: 12px;
 }
 
-.image-classification .card-header.spaced h3 {
+.card-header.spaced h3 {
   margin: 0;
   font-size: 18px;
 }
 
-.image-classification .class-name-input {
+.class-name-input {
   flex: 1;
   border: 1px solid transparent;
   background: transparent;
@@ -200,24 +200,24 @@
   outline: none;
 }
 
-.image-classification .class-name-input:focus-visible {
+.class-name-input:focus-visible {
   border-color: rgba(37, 99, 235, 0.25);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
 }
 
-.image-classification .dots {
+.dots {
   font-size: 18px;
   color: rgba(15, 23, 42, 0.5);
   user-select: none;
 }
 
-.image-classification .class-card-actions {
+.class-card-actions {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 }
 
-.image-classification .ic-webcam-toggle {
+.ic-webcam-toggle {
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -231,26 +231,26 @@
   transition: transform 120ms ease, background 120ms ease;
 }
 
-.image-classification .ic-webcam-toggle:hover {
+.ic-webcam-toggle:hover {
   transform: translateY(-1px);
   background: rgba(37, 99, 235, 0.16);
 }
 
-.image-classification .ic-webcam-toggle:active {
+.ic-webcam-toggle:active {
   transform: translateY(0);
 }
 
-.image-classification .ic-webcam-toggle:focus-visible {
+.ic-webcam-toggle:focus-visible {
   outline: 3px solid rgba(37, 99, 235, 0.25);
   outline-offset: 2px;
 }
 
-.image-classification .ic-webcam-icon {
+.ic-webcam-icon {
   width: 22px;
   height: 22px;
 }
 
-.image-classification .ic-webcam-x {
+.ic-webcam-x {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -263,19 +263,19 @@
   padding: 2px;
 }
 
-.image-classification .classes-column {
+.classes-column {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.image-classification .webcam-panel {
+.webcam-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.image-classification .capture-slot {
+.capture-slot {
   background: #0f1115;
   border-radius: 12px;
   overflow: hidden;
@@ -285,18 +285,18 @@
   position: relative;
 }
 
-.image-classification .capture-slot video {
+.capture-slot video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.image-classification .capture-slot.mirrored video {
+.capture-slot.mirrored video {
   transform: scaleX(-1);
 }
 
-.image-classification .ic-camera-switch {
+.ic-camera-switch {
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(15, 17, 21, 0.55);
@@ -316,27 +316,27 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-.image-classification .ic-camera-switch:hover {
+.ic-camera-switch:hover {
   background: rgba(15, 17, 21, 0.7);
   border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-1px);
 }
 
-.image-classification .ic-camera-switch:active {
+.ic-camera-switch:active {
   transform: translateY(0);
 }
 
-.image-classification .ic-camera-switch:focus-visible {
+.ic-camera-switch:focus-visible {
   outline: 3px solid rgba(37, 99, 235, 0.35);
   outline-offset: 2px;
 }
 
-.image-classification .ic-camera-switch svg {
+.ic-camera-switch svg {
   width: 20px;
   height: 20px;
 }
 
-.image-classification .primary {
+.primary {
   background: linear-gradient(135deg, #3f73ff, #2554d3);
   color: #fff;
   border: none;
@@ -347,36 +347,36 @@
   transition: transform 120ms ease, filter 120ms ease;
 }
 
-.image-classification .primary:hover:not(:disabled) {
+.primary:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.02);
 }
 
-.image-classification .primary:active:not(:disabled) {
+.primary:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.image-classification .primary:disabled {
+.primary:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.image-classification .block {
+.block {
   width: 100%;
 }
 
 /* Match active step (blue) */
-.image-classification .dataCollector.primary {
+.dataCollector.primary {
   background: linear-gradient(135deg, #3f73ff, #2554d3);
 }
 
-.image-classification .count-row {
+.count-row {
   display: flex;
   justify-content: center;
   margin-top: 12px;
 }
 
-.image-classification .count-box {
+.count-box {
   position: relative;
   z-index: 0;
   width: var(--webcam-frame-size);
@@ -396,18 +396,18 @@
   transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.image-classification .count-box.recording {
+.count-box.recording {
   border-color: rgba(37, 99, 235, 0.55);
 }
 
-.image-classification .count-bubbles {
+.count-bubbles {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
 }
 
-.image-classification .count-bubble {
+.count-bubble {
   position: absolute;
   left: 50%;
   bottom: -30px;
@@ -422,7 +422,7 @@
   user-select: none;
 }
 
-.image-classification .count-meta {
+.count-meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -430,7 +430,7 @@
   z-index: 1;
 }
 
-.image-classification .count-kicker {
+.count-kicker {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -438,13 +438,13 @@
   color: rgba(15, 23, 42, 0.55);
 }
 
-.image-classification .count-label {
+.count-label {
   font-weight: 700;
   font-size: 13px;
   color: rgba(15, 23, 42, 0.78);
 }
 
-.image-classification .count-number {
+.count-number {
   position: relative;
   z-index: 1;
   font-variant-numeric: tabular-nums;
@@ -457,11 +457,11 @@
   transition: transform 100ms ease-out, color 120ms ease;
 }
 
-.image-classification .count-box.recording .count-number {
+.count-box.recording .count-number {
   color: rgba(37, 99, 235, 0.95);
 }
 
-.image-classification .count-number.bump {
+.count-number.bump {
   transform: scale(1.5);
 }
 
@@ -487,17 +487,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .image-classification .count-bubble {
+  .count-bubble {
     animation: none;
   }
 
-  .image-classification .count-box,
-  .image-classification .count-number {
+  .count-box,
+  .count-number {
     transition: none;
   }
 }
 
-.image-classification .dashed {
+.dashed {
   border: 2px dashed rgba(15, 23, 42, 0.18);
   background: rgba(255, 255, 255, 0.75);
   box-shadow: none;
@@ -508,26 +508,26 @@
   transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
-.image-classification .dashed:hover {
+.dashed:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.92);
   border-color: rgba(37, 99, 235, 0.28);
 }
 
-.image-classification .add-placeholder {
+.add-placeholder {
   font-weight: 800;
   color: rgba(15, 23, 42, 0.7);
 }
 
-.image-classification .training-progress {
+.training-progress {
   margin: 12px 0 0;
 }
 
-.image-classification .training-progress.hidden {
+.training-progress.hidden {
   display: none;
 }
 
-.image-classification .training-progress-meta {
+.training-progress-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -537,40 +537,40 @@
   margin-bottom: 8px;
 }
 
-.image-classification .training-progress-bar {
+.training-progress-bar {
   height: 12px;
   background: rgba(15, 23, 42, 0.08);
   border-radius: 999px;
   overflow: hidden;
 }
 
-.image-classification .training-progress-fill {
+.training-progress-fill {
   height: 100%;
   background: linear-gradient(135deg, #3f73ff, #2554d3);
   width: 0%;
   transition: width 0.2s;
 }
 
-.image-classification .accordion {
+.accordion {
   margin-top: 14px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
   padding-top: 12px;
 }
 
-.image-classification .accordion summary {
+.accordion summary {
   cursor: pointer;
   font-weight: 800;
   color: rgba(15, 23, 42, 0.78);
 }
 
-.image-classification .form-grid {
+.form-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
 
-.image-classification .form-grid label {
+.form-grid label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -579,20 +579,20 @@
   color: rgba(15, 23, 42, 0.7);
 }
 
-.image-classification .form-grid input {
+.form-grid input {
   border: 1px solid rgba(15, 23, 42, 0.14);
   border-radius: 10px;
   padding: 8px 10px;
   font: inherit;
 }
 
-.image-classification .preview-body {
+.preview-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.image-classification .video-shell {
+.video-shell {
   background: #0f1115;
   border-radius: 12px;
   overflow: hidden;
@@ -602,36 +602,36 @@
   position: relative;
 }
 
-.image-classification .webcam-panel .dataCollector.block {
+.webcam-panel .dataCollector.block {
   width: var(--webcam-frame-size);
   margin-inline: auto;
   box-sizing: border-box;
 }
 
-.image-classification .video-shell video {
+.video-shell video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.image-classification .video-shell.mirrored video {
+.video-shell.mirrored video {
   transform: scaleX(-1);
 }
 
-.image-classification .preview-output-header {
+.preview-output-header {
   font-weight: 800;
   color: rgba(15, 23, 42, 0.78);
   margin-bottom: 10px;
 }
 
-.image-classification #probabilityList {
+.probabilityList {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.image-classification .probability-row-header {
+.probability-row-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -642,7 +642,7 @@
   color: rgba(15, 23, 42, 0.7);
 }
 
-.image-classification .probability-bar {
+.probability-bar {
   height: 14px;
   background: #eceff5;
   border-radius: 999px;
@@ -650,14 +650,14 @@
   position: relative;
 }
 
-.image-classification .probability-bar-fill {
+.probability-bar-fill {
   height: 100%;
   background: #3f73ff;
   transition: width 0.2s;
   width: 0%;
 }
 
-.image-classification .status-banner {
+.status-banner {
   margin-top: 12px;
   padding: 10px 12px;
   border-radius: 12px;
@@ -668,26 +668,41 @@
   font-size: 13px;
 }
 
-.image-classification .status-banner.error {
+.status-banner.error {
   border-color: rgba(220, 38, 38, 0.22);
   background: rgba(254, 242, 242, 0.9);
   color: rgba(153, 27, 27, 0.92);
 }
 
 @media (max-width: 1020px) {
-  .image-classification .form-grid {
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 420px) {
-  .image-classification .ic-step {
+  .ic-step {
     padding: 10px 12px;
     font-size: 14px;
   }
 
-  .image-classification .ic-step-number {
+  .ic-step-number {
     width: 26px;
     height: 26px;
   }
+}
+
+.class-card {
+}
+
+.training-card {
+}
+
+.preview-card {
+}
+
+.preview-output {
+}
+
+.probability-row {
 }

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import NavigationDrawer from './NavigationDrawer.jsx';
+import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import './LandingPage.css';
 
 const MODELS = [

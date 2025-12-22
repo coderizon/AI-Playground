@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import ImageClassification from './ImageClassification.jsx';
-import LandingPage from './LandingPage.jsx';
+import ImageClassification from './modules/image-classification/ImageClassification.jsx';
+import LandingPage from './modules/landing/LandingPage.jsx';
 
 export default function App() {
   return (
