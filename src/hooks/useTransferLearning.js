@@ -4,6 +4,7 @@ import * as tf from '@tensorflow/tfjs';
 
 const CAPTURE_INTERVAL_MS = 200;
 const PREDICTION_THROTTLE_MS = 100;
+const CAPTURE_HAPTIC_MS = 12;
 
 function createTransferModel({ inputDim, numClasses, learningRate }) {
   const model = tf.sequential();
@@ -237,11 +238,18 @@ export function useTransferLearning({
       if (!videoEl) return;
       if (videoEl.readyState < 2) return;
 
+      const triggerCaptureHaptic = () => {
+        if (typeof navigator === 'undefined') return;
+        if (typeof navigator.vibrate !== 'function') return;
+        navigator.vibrate(CAPTURE_HAPTIC_MS);
+      };
+
       if (!featureExtractor || modelStatus !== 'ready') {
         const imageData = captureExampleFrame(videoEl);
         if (!imageData) return;
         pendingExamplesRef.current.push({ classIndex, imageData });
         setPendingExampleCount(pendingExamplesRef.current.length);
+        triggerCaptureHaptic();
       } else {
         const capture = drawVideoToCaptureCanvas(videoEl);
         if (!capture) return;
@@ -260,6 +268,7 @@ export function useTransferLearning({
         if (!features) return;
         trainingInputsRef.current.push(features);
         trainingLabelsRef.current.push(classIndex);
+        triggerCaptureHaptic();
       }
 
       setClasses((prev) =>
