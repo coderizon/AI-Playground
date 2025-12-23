@@ -355,6 +355,53 @@ export function useTransferLearning({
     [collectingClassIndex, resetTrainingState, stopCollecting],
   );
 
+  const removeClass = useCallback(
+    (classIndex) => {
+      if (classes.length <= 1) return false;
+      if (classIndex < 0 || classIndex >= classes.length) return false;
+
+      stopCollecting();
+      resetTrainingState();
+
+      if (pendingExamplesRef.current.length) {
+        const nextPending = [];
+        for (const example of pendingExamplesRef.current) {
+          if (example.classIndex === classIndex) continue;
+          const nextIndex =
+            example.classIndex > classIndex ? example.classIndex - 1 : example.classIndex;
+          nextPending.push({ ...example, classIndex: nextIndex });
+        }
+        pendingExamplesRef.current = nextPending;
+        setPendingExampleCount(nextPending.length);
+      }
+
+      if (trainingLabelsRef.current.length) {
+        const nextInputs = [];
+        const nextLabels = [];
+
+        for (let index = 0; index < trainingLabelsRef.current.length; index += 1) {
+          const label = trainingLabelsRef.current[index];
+          const input = trainingInputsRef.current[index];
+
+          if (label === classIndex) {
+            if (input) input.dispose();
+            continue;
+          }
+
+          nextLabels.push(label > classIndex ? label - 1 : label);
+          nextInputs.push(input);
+        }
+
+        trainingLabelsRef.current = nextLabels;
+        trainingInputsRef.current = nextInputs;
+      }
+
+      setClasses((prev) => prev.filter((_, index) => index !== classIndex));
+      return true;
+    },
+    [classes.length, resetTrainingState, stopCollecting],
+  );
+
   const train = useCallback(async () => {
     if (!canTrain) return false;
 
@@ -529,6 +576,7 @@ export function useTransferLearning({
     startCollecting,
     stopCollecting,
     clearClassExamples,
+    removeClass,
     train,
   };
 }

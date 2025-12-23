@@ -27,6 +27,8 @@ export default function ClassCard({
   captureRef,
   onToggleWebcam,
   onClearExamples,
+  canRemoveClass,
+  onRemoveClass,
 }) {
   const [particles, setParticles] = useState([]);
   const [bumpAnimation, setBumpAnimation] = useState(false);
@@ -36,6 +38,7 @@ export default function ClassCard({
   const previousExampleCountRef = useRef(exampleCount);
   const menuRef = useRef(null);
   const isClearDisabled = exampleCount === 0;
+  const isRemoveDisabled = !canRemoveClass;
 
   const addParticle = useCallback(() => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -144,7 +147,19 @@ export default function ClassCard({
                     if (onClearExamples) onClearExamples();
                   }}
                 >
-                  Alle Beispiele löschen
+                  Alle Beispiele entfernen
+                </button>
+                <button
+                  className={styles['menu-item']}
+                  type="button"
+                  role="menuitem"
+                  disabled={isRemoveDisabled}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (onRemoveClass) onRemoveClass();
+                  }}
+                >
+                  Klasse löschen
                 </button>
               </div>
             ) : null}

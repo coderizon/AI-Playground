@@ -56,6 +56,7 @@ export default function ImageClassification() {
     startCollecting,
     stopCollecting,
     clearClassExamples,
+    removeClass,
     train,
   } = useTransferLearning({
     featureExtractor: mobilenet,
@@ -92,6 +93,22 @@ export default function ImageClassification() {
     const nextClass = addClass();
     if (nextClass?.id) setActiveWebcamClassId(nextClass.id);
   }, [addClass]);
+
+  const handleRemoveClass = useCallback(
+    (classIndex, classId) => {
+      if (classes.length <= 1) return;
+
+      const nextClasses = classes.filter((_, index) => index !== classIndex);
+      if (activeWebcamClassId === classId) {
+        const nextActive =
+          nextClasses[classIndex] ?? nextClasses[classIndex - 1] ?? nextClasses[0];
+        setActiveWebcamClassId(nextActive?.id ?? null);
+      }
+
+      removeClass(classIndex);
+    },
+    [activeWebcamClassId, classes, removeClass],
+  );
 
   return (
     <div className={styles['image-classification']}>
@@ -171,6 +188,8 @@ export default function ImageClassification() {
                   onCollectStart={() => startCollecting(index)}
                   onCollectStop={stopCollecting}
                   onClearExamples={() => clearClassExamples(index)}
+                  canRemoveClass={classes.length > 1}
+                  onRemoveClass={() => handleRemoveClass(index, cls.id)}
                 />
               ))}
 
