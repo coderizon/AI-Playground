@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Video, X } from 'lucide-react';
+import { MoreVertical, Video, X } from 'lucide-react';
 
 import WebcamCapture from './WebcamCapture.jsx';
 import styles from '../ImageClassification.module.css';
@@ -26,12 +26,15 @@ export default function ClassCard({
   isWebcamEnabled,
   captureRef,
   onToggleWebcam,
+  onClearExamples,
 }) {
   const [particles, setParticles] = useState([]);
   const [bumpAnimation, setBumpAnimation] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const bumpTimeoutRef = useRef(null);
   const particleTimeoutsRef = useRef(new Set());
   const previousExampleCountRef = useRef(exampleCount);
+  const menuRef = useRef(null);
 
   const addParticle = useCallback(() => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -71,6 +74,31 @@ export default function ClassCard({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+
+    const handleOutsideClick = (event) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
   return (
     <div className={cx(styles.card, styles['class-card'])}>
       <div className={styles['card-header']}>
@@ -92,9 +120,33 @@ export default function ClassCard({
             <Video className={styles['ic-webcam-icon']} aria-hidden="true" />
             {isWebcamEnabled ? <X className={styles['ic-webcam-x']} aria-hidden="true" /> : null}
           </button>
-          <span className={styles.dots} aria-hidden="true">
-            ⋮
-          </span>
+          <div className={styles['menu-wrapper']} ref={menuRef}>
+            <button
+              className={styles['menu-button']}
+              type="button"
+              aria-label="Klassenoptionen"
+              aria-haspopup="menu"
+              aria-expanded={isMenuOpen}
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+            >
+              <MoreVertical className={styles.dots} aria-hidden="true" />
+            </button>
+            {isMenuOpen ? (
+              <div className={styles.menu} role="menu">
+                <button
+                  className={styles['menu-item']}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (onClearExamples) onClearExamples();
+                  }}
+                >
+                  Alle Beispiele löschen
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 

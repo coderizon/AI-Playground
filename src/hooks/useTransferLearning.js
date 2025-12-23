@@ -297,6 +297,55 @@ export function useTransferLearning({
     [canCollect, captureIntervalMs, collectExample, resetTrainingState, stopCollecting],
   );
 
+  const clearClassExamples = useCallback(
+    (classIndex) => {
+      if (collectingClassIndex === classIndex) {
+        stopCollecting();
+      }
+
+      resetTrainingState();
+
+      if (pendingExamplesRef.current.length) {
+        const nextPending = pendingExamplesRef.current.filter(
+          (example) => example.classIndex !== classIndex,
+        );
+
+        if (nextPending.length !== pendingExamplesRef.current.length) {
+          pendingExamplesRef.current = nextPending;
+          setPendingExampleCount(nextPending.length);
+        }
+      }
+
+      if (trainingLabelsRef.current.length) {
+        const nextInputs = [];
+        const nextLabels = [];
+
+        for (let index = 0; index < trainingLabelsRef.current.length; index += 1) {
+          const label = trainingLabelsRef.current[index];
+          const input = trainingInputsRef.current[index];
+
+          if (label === classIndex) {
+            if (input) input.dispose();
+            continue;
+          }
+
+          nextLabels.push(label);
+          nextInputs.push(input);
+        }
+
+        trainingLabelsRef.current = nextLabels;
+        trainingInputsRef.current = nextInputs;
+      }
+
+      setClasses((prev) =>
+        prev.map((cls, index) =>
+          index === classIndex ? { ...cls, exampleCount: 0 } : cls,
+        ),
+      );
+    },
+    [collectingClassIndex, resetTrainingState, stopCollecting],
+  );
+
   const train = useCallback(async () => {
     if (!canTrain) return false;
 
@@ -470,6 +519,7 @@ export function useTransferLearning({
     normalizeClassName,
     startCollecting,
     stopCollecting,
+    clearClassExamples,
     train,
   };
 }

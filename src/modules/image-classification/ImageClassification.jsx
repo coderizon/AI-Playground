@@ -55,6 +55,7 @@ export default function ImageClassification() {
     normalizeClassName,
     startCollecting,
     stopCollecting,
+    clearClassExamples,
     train,
   } = useTransferLearning({
     featureExtractor: mobilenet,
@@ -169,6 +170,7 @@ export default function ImageClassification() {
                   onClassNameBlur={() => normalizeClassName(index)}
                   onCollectStart={() => startCollecting(index)}
                   onCollectStop={stopCollecting}
+                  onClearExamples={() => clearClassExamples(index)}
                 />
               ))}
 

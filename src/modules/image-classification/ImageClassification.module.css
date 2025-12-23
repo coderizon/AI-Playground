@@ -206,15 +206,82 @@
 }
 
 .dots {
-  font-size: 18px;
   color: rgba(15, 23, 42, 0.5);
   user-select: none;
+  width: 24px;
+  height: 24px;
 }
 
 .class-card-actions {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+}
+
+.menu-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.menu-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.65);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.menu-button:hover {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.menu-button:active {
+  transform: translateY(1px);
+}
+
+.menu-button:focus-visible {
+  outline: 3px solid rgba(15, 23, 42, 0.2);
+  outline-offset: 2px;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  border-radius: 12px;
+  border: 1px solid #d9e0ec;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 16px 32px rgba(17, 34, 68, 0.16);
+  z-index: 2;
+}
+
+.menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: rgba(185, 28, 28, 0.08);
+}
+
+.menu-item:focus-visible {
+  outline: 3px solid rgba(185, 28, 28, 0.2);
+  outline-offset: 2px;
 }
 
 .ic-webcam-toggle {
