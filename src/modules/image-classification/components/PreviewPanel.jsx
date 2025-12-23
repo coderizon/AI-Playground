@@ -1,3 +1,4 @@
+import BluetoothButton from './BluetoothButton.jsx';
 import WebcamCapture from './WebcamCapture.jsx';
 import styles from '../ImageClassification.module.css';
 
@@ -51,6 +52,7 @@ export default function PreviewPanel({
         <div className={styles['preview-output']}>
           <div className={styles['preview-output-header']}>
             <span>Ausgabe</span>
+            <BluetoothButton />
           </div>
 
           <div className={styles.probabilityList}>
