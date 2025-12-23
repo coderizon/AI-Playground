@@ -35,6 +35,7 @@ export default function ClassCard({
   const particleTimeoutsRef = useRef(new Set());
   const previousExampleCountRef = useRef(exampleCount);
   const menuRef = useRef(null);
+  const isClearDisabled = exampleCount === 0;
 
   const addParticle = useCallback(() => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -137,6 +138,7 @@ export default function ClassCard({
                   className={styles['menu-item']}
                   type="button"
                   role="menuitem"
+                  disabled={isClearDisabled}
                   onClick={() => {
                     setIsMenuOpen(false);
                     if (onClearExamples) onClearExamples();

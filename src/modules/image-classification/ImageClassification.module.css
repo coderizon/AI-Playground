@@ -180,7 +180,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
   margin-bottom: 12px;
 }
 
@@ -191,6 +191,7 @@
 
 .class-name-input {
   flex: 1;
+  min-width: 0;
   border: 1px solid transparent;
   background: transparent;
   border-radius: 10px;
@@ -208,14 +209,14 @@
 .dots {
   color: rgba(15, 23, 42, 0.5);
   user-select: none;
-  width: 24px;
-  height: 24px;
+  width: clamp(18px, 4vw, 24px);
+  height: clamp(18px, 4vw, 24px);
 }
 
 .class-card-actions {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: clamp(6px, 2vw, 10px);
 }
 
 .menu-wrapper {
@@ -224,9 +225,9 @@
 }
 
 .menu-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: clamp(30px, 7vw, 36px);
+  height: clamp(30px, 7vw, 36px);
+  border-radius: clamp(8px, 2.5vw, 10px);
   border: 1px solid transparent;
   background: rgba(15, 23, 42, 0.06);
   color: rgba(15, 23, 42, 0.65);
@@ -279,15 +280,24 @@
   background: rgba(185, 28, 28, 0.08);
 }
 
+.menu-item:disabled {
+  color: rgba(15, 23, 42, 0.35);
+  cursor: not-allowed;
+}
+
+.menu-item:disabled:hover {
+  background: transparent;
+}
+
 .menu-item:focus-visible {
   outline: 3px solid rgba(185, 28, 28, 0.2);
   outline-offset: 2px;
 }
 
 .ic-webcam-toggle {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: clamp(36px, 9vw, 44px);
+  height: clamp(36px, 9vw, 44px);
+  border-radius: clamp(10px, 3vw, 12px);
   border: none;
   background: rgba(37, 99, 235, 0.12);
   color: rgba(37, 99, 235, 0.9);
@@ -313,8 +323,8 @@
 }
 
 .ic-webcam-icon {
-  width: 22px;
-  height: 22px;
+  width: clamp(18px, 4.5vw, 22px);
+  height: clamp(18px, 4.5vw, 22px);
 }
 
 .ic-webcam-x {
@@ -322,12 +332,12 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 18px;
-  height: 18px;
+  width: clamp(14px, 3.8vw, 18px);
+  height: clamp(14px, 3.8vw, 18px);
   color: rgba(15, 23, 42, 0.9);
   background: rgba(255, 255, 255, 0.85);
-  border-radius: 8px;
-  padding: 2px;
+  border-radius: clamp(6px, 2vw, 8px);
+  padding: clamp(1px, 0.6vw, 2px);
 }
 
 .classes-column {
