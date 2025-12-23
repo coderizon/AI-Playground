@@ -366,6 +366,12 @@
 }
 
 /* Match active step (blue) */
+.dataCollector {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .dataCollector.primary {
   background: linear-gradient(135deg, #3f73ff, #2554d3);
 }
