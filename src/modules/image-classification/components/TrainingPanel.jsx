@@ -1,4 +1,5 @@
 import styles from '../ImageClassification.module.css';
+import NeuralNetworkAnimation from './NeuralNetworkAnimation.jsx';
 
 function cx(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -37,6 +38,9 @@ export default function TrainingPanel({
           />
         </div>
       </div>
+      {isTraining ? (
+        <NeuralNetworkAnimation className={styles['training-animation']} />
+      ) : null}
 
       <details open className={styles.accordion}>
         <summary>Erweitert</summary>
