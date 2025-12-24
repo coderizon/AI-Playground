@@ -732,14 +732,14 @@
 }
 
 .bluetooth-button {
-  --bt-height: clamp(1px, 8vw, 52px);
+  --bt-height: clamp(1px, 8vw, 33px);
   --bt-border: 1px;
   --bt-blue: #4a90e2;
   --bt-blue-light: #6b9eff;
   --bt-circle: calc(var(--bt-height) * 1.6);
   position: relative;
   height: var(--bt-height);
-  width: clamp(160px, 38vw, 240px);
+  width: clamp(70px, 16vw, 140px);
   max-width: 100%;
   padding: 0;
   border: var(--bt-border) solid var(--bt-blue);
@@ -771,7 +771,7 @@
   display: flex;
   align-items: center;
   height: 100%;
-  padding: 0 clamp(16px, 4vw, 24px) 0 0;
+  padding: 0 clamp(6px, 2vw, 12px) 0 0;
 }
 
 .bluetooth-circle {
@@ -795,12 +795,12 @@
 
 .bluetooth-text {
   flex: 1;
-  text-align: center;
-  font-size: clamp(16px, 3.4vw, 22px);
+  text-align: left;
+  font-size: inherit;
   font-weight: 500;
   color: var(--bt-blue);
   letter-spacing: 0.5px;
-  padding-left: calc(var(--bt-circle) * 0.5);
+  padding-left: calc(var(--bt-circle) * 0.85);
 }
 
 .probabilityList {
@@ -883,6 +883,21 @@
     width: 26px;
     height: 26px;
   }
+
+  .bluetooth-button {
+    --bt-height: clamp(1px, 8vw, 52px);
+    width: clamp(160px, 38vw, 240px);
+  }
+
+  .bluetooth-content {
+    padding: 0 clamp(16px, 4vw, 24px) 0 0;
+  }
+
+  .bluetooth-text {
+    text-align: center;
+    font-size: clamp(16px, 3.4vw, 22px);
+    padding-left: calc(var(--bt-circle) * 0.5);
+  }
 }
 
 .class-card {
@@ -895,6 +910,9 @@
 }
 
 .preview-output {
+  width: var(--webcam-frame-size);
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .probability-row {
