@@ -32,6 +32,19 @@ export default function ImageClassification() {
     return activeWebcamClassId !== null;
   }, [activeStep, activeWebcamClassId]);
 
+  const modelStatusMessage = useMemo(() => {
+    if (mobilenetStatus === 'loading') {
+      return 'Modell wird geladen. Aufnahme ist gleich verfügbar.';
+    }
+    if (mobilenetStatus === 'error') {
+      return 'Modell konnte nicht geladen werden. Bitte Seite neu laden.';
+    }
+    if (mobilenetStatus === 'idle') {
+      return 'Modell ist noch nicht bereit.';
+    }
+    return null;
+  }, [mobilenetStatus]);
+
   const {
     status: webcamStatus,
     stream,
@@ -49,6 +62,7 @@ export default function ImageClassification() {
     isTrained,
     canCollect,
     canTrain,
+    trainBlockers,
     addClass,
     updateClassName,
     clearDefaultClassName,
@@ -168,6 +182,18 @@ export default function ImageClassification() {
         <main className={styles['ic-stage']} data-step={activeStep}>
           {activeStep === 'data' ? (
             <section className={styles['classes-column']}>
+              {modelStatusMessage ? (
+                <div
+                  className={cx(
+                    styles['status-banner'],
+                    mobilenetStatus === 'error' && styles.error,
+                  )}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {modelStatusMessage}
+                </div>
+              ) : null}
               {classes.map((cls, index) => (
                 <ClassCard
                   key={cls.id}
@@ -216,6 +242,7 @@ export default function ImageClassification() {
                 batchSize={batchSize}
                 learningRate={learningRate}
                 canTrain={canTrain}
+                trainBlockers={trainBlockers}
                 isTraining={isTraining}
                 trainingPercent={trainingPercent}
                 onTrain={train}

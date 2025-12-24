@@ -80,7 +80,7 @@ export function useTransferLearning({
   const predictLoopRafRef = useRef(null);
   const lastPredictionUpdateRef = useRef(0);
 
-  const canCollect = modelStatus !== 'error' && isWebcamReady && !isTraining;
+  const canCollect = modelStatus === 'ready' && isWebcamReady && !isTraining;
 
   const canTrain = useMemo(() => {
     if (isTraining) return false;
@@ -89,6 +89,45 @@ export function useTransferLearning({
     if (classes.length < 2) return false;
 
     return classes.every((cls) => cls.exampleCount > 0);
+  }, [classes, isTraining, modelStatus, pendingExampleCount]);
+
+  const trainBlockers = useMemo(() => {
+    const blockers = [];
+
+    if (isTraining) {
+      blockers.push('Training läuft bereits.');
+    }
+
+    if (modelStatus !== 'ready') {
+      const modelMessage =
+        modelStatus === 'loading'
+          ? 'Modell wird noch geladen.'
+          : modelStatus === 'error'
+            ? 'Modell konnte nicht geladen werden.'
+            : 'Modell ist noch nicht bereit.';
+      blockers.push(modelMessage);
+    }
+
+    if (pendingExampleCount > 0) {
+      blockers.push(`Beispiele werden noch verarbeitet (${pendingExampleCount}).`);
+    }
+
+    if (classes.length < 2) {
+      blockers.push('Mindestens zwei Klassen erforderlich.');
+    }
+
+    const emptyClasses = classes.reduce((acc, cls, index) => {
+      if (cls.exampleCount > 0) return acc;
+      const label = cls.name?.trim() || getDefaultClassName(index);
+      acc.push(label);
+      return acc;
+    }, []);
+
+    if (emptyClasses.length > 0) {
+      blockers.push(`Leere Klassen: ${emptyClasses.join(', ')}.`);
+    }
+
+    return blockers;
   }, [classes, isTraining, modelStatus, pendingExampleCount]);
 
   const resetTrainingState = useCallback(() => {
@@ -569,6 +608,7 @@ export function useTransferLearning({
     pendingExampleCount,
     canCollect,
     canTrain,
+    trainBlockers,
     addClass,
     updateClassName,
     clearDefaultClassName,

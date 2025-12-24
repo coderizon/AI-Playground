@@ -16,7 +16,10 @@ export default function TrainingPanel({
   canTrain,
   isTraining,
   trainingPercent,
+  trainBlockers = [],
 }) {
+  const showTrainBlockers = !isTraining && !canTrain && trainBlockers.length > 0;
+
   return (
     <div className={cx(styles.card, styles['training-card'])}>
       <div className={cx(styles['card-header'], styles.spaced)}>
@@ -25,6 +28,19 @@ export default function TrainingPanel({
           Modell trainieren
         </button>
       </div>
+
+      {showTrainBlockers ? (
+        <div className={styles['status-banner']} role="status" aria-live="polite">
+          <div className={styles['status-title']}>Trainieren deaktiviert</div>
+          <ul className={styles['status-list']}>
+            {trainBlockers.map((reason, index) => (
+              <li key={`${index}-${reason}`} className={styles['status-item']}>
+                {reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className={cx(styles['training-progress'], !isTraining && styles.hidden)}>
         <div className={styles['training-progress-meta']}>
