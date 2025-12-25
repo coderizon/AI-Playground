@@ -13,6 +13,8 @@ function cx(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
+const STEP_ORDER = ['data', 'train', 'test'];
+
 export default function ImageClassification() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [activeStep, setActiveStep] = useState('data');
@@ -95,6 +97,8 @@ export default function ImageClassification() {
 
   const showCameraSwitch = webcamStatus === 'ready' && canSwitchCamera;
 
+  const activeStepIndex = Math.max(0, STEP_ORDER.indexOf(activeStep));
+
   const toggleWebcamForClass = useCallback((classId) => {
     setActiveWebcamClassId((prev) => (prev === classId ? null : classId));
   }, []);
@@ -149,7 +153,15 @@ export default function ImageClassification() {
           </div>
         </header>
 
-        <nav className={styles['ic-steps']} aria-label="Bildklassifikation Schritte">
+        <nav
+          className={styles['ic-steps']}
+          aria-label="Bildklassifikation Schritte"
+          style={{
+            '--active-step': activeStepIndex,
+            '--step-count': STEP_ORDER.length,
+          }}
+        >
+          <span className={styles['ic-step-indicator']} aria-hidden="true" />
           <button
             className={cx(styles['ic-step'], activeStep === 'data' && styles.active)}
             type="button"
