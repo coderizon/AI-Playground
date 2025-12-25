@@ -768,9 +768,8 @@
   max-width: 100%;
   padding: 0;
   border: var(--bt-border) solid var(--bt-blue);
-  border-radius: 999px;
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   overflow: hidden;
   flex-shrink: 0;
@@ -779,7 +778,6 @@
 
 .bluetooth-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(22, 54, 112, 0.22);
 }
 
 .bluetooth-button:active {
