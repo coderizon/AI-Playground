@@ -9,6 +9,10 @@ export const DEVICES = [
       '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
     ],
     image: '/assets/images/arduino.png',
+    imageOffset: {
+      right: 0,
+      bottom: 50,
+    },
   },
   {
     id: 'calliope',
@@ -20,6 +24,10 @@ export const DEVICES = [
       '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
     ],
     image: '/assets/images/calliope.png',
+    imageOffset: {
+      right: 0,
+      bottom: -120,
+    },
   },
   {
     id: 'microbit',
@@ -31,5 +39,9 @@ export const DEVICES = [
       '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
     ],
     image: '/assets/images/microbit.png',
+    imageOffset: {
+      right: 0,
+      bottom: -70,
+    },
   },
 ];
