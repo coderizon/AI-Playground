@@ -828,6 +828,127 @@
   padding-left: calc(var(--bt-circle) * 0.85);
 }
 
+.bluetooth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+.bluetooth-modal {
+  width: min(560px, 94vw);
+  max-height: min(640px, 92vh);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bluetooth-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bluetooth-modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.bluetooth-modal-intro {
+  margin: 6px 0 0;
+  color: rgba(15, 23, 42, 0.62);
+  font-size: 14px;
+}
+
+.bluetooth-modal-close {
+  border: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.1);
+  color: rgba(15, 23, 42, 0.7);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.bluetooth-modal-close:hover {
+  background: rgba(15, 23, 42, 0.16);
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.bluetooth-modal-close:active {
+  transform: scale(0.98);
+}
+
+.bluetooth-modal-close:focus-visible {
+  outline: 3px solid rgba(107, 158, 255, 0.45);
+  outline-offset: 2px;
+}
+
+.bluetooth-device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.bluetooth-device-card {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 14px 12px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.bluetooth-device-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(74, 144, 226, 0.4);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
+.bluetooth-device-card:focus-visible {
+  outline: 3px solid rgba(107, 158, 255, 0.45);
+  outline-offset: 2px;
+}
+
+.bluetooth-device-image {
+  width: 84px;
+  height: 84px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.bluetooth-device-image img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.bluetooth-device-name {
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.78);
+}
+
 .probabilityList {
   display: flex;
   flex-direction: column;
@@ -895,6 +1016,32 @@
 @media (max-width: 1020px) {
   .form-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .bluetooth-modal {
+    width: min(420px, 94vw);
+  }
+
+  .bluetooth-device-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bluetooth-device-card {
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    align-items: center;
+    text-align: left;
+  }
+
+  .bluetooth-device-image {
+    width: 64px;
+    height: 64px;
+  }
+
+  .bluetooth-device-name {
+    text-align: left;
   }
 }
 

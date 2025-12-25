@@ -1,8 +1,24 @@
 import styles from '../ImageClassification.module.css';
 
-export default function BluetoothButton({ label = 'verbinden', onClick }) {
+export default function BluetoothButton({
+  label,
+  onClick,
+  isConnected = false,
+  deviceName,
+}) {
+  const resolvedLabel = label ?? (isConnected ? 'Trennen' : 'Verbinden');
+  const accessibleLabel =
+    isConnected && deviceName ? `${resolvedLabel} von ${deviceName}` : resolvedLabel;
+
   return (
-    <button className={styles['bluetooth-button']} type="button" onClick={onClick}>
+    <button
+      className={styles['bluetooth-button']}
+      type="button"
+      onClick={onClick}
+      aria-pressed={isConnected}
+      aria-label={accessibleLabel}
+      title={isConnected && deviceName ? `Verbunden mit ${deviceName}` : undefined}
+    >
       <span className={styles['bluetooth-content']}>
         <span className={styles['bluetooth-circle']} aria-hidden="true">
           <svg
@@ -20,7 +36,7 @@ export default function BluetoothButton({ label = 'verbinden', onClick }) {
             />
           </svg>
         </span>
-        <span className={styles['bluetooth-text']}>{label}</span>
+        <span className={styles['bluetooth-text']}>{resolvedLabel}</span>
       </span>
     </button>
   );

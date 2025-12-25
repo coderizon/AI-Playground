@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
+import { useBluetooth } from '../../hooks/useBluetooth.js';
 import { useMobileNet } from '../../hooks/useMobileNet.js';
 import { useTransferLearning } from '../../hooks/useTransferLearning.js';
 import { useWebcam } from '../../hooks/useWebcam.js';
+import BluetoothModal from './components/BluetoothModal.jsx';
 import ClassCard from './components/ClassCard.jsx';
 import PreviewPanel from './components/PreviewPanel.jsx';
 import TrainingPanel from './components/TrainingPanel.jsx';
@@ -22,9 +24,13 @@ export default function ImageClassification() {
   const [epochs, setEpochs] = useState(50);
   const [batchSize, setBatchSize] = useState(15);
   const [learningRate, setLearningRate] = useState(0.001);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const captureVideoRef = useRef(null);
   const hasInitializedWebcamRef = useRef(false);
+  const lastSentLabelRef = useRef(null);
+
+  const { connect, disconnect, send, isConnected, device } = useBluetooth();
 
   const { status: mobilenetStatus, model: mobilenet, outputDim, imageSize } = useMobileNet();
 
@@ -95,6 +101,26 @@ export default function ImageClassification() {
     hasInitializedWebcamRef.current = true;
   }, [classes]);
 
+  useEffect(() => {
+    if (!isConnected || activeStep !== 'test' || !isTrained) {
+      lastSentLabelRef.current = null;
+      return;
+    }
+    if (!classes.length || !probabilities.length) return;
+
+    const bestIndex = probabilities.reduce(
+      (bestIdx, value, index) => (value > probabilities[bestIdx] ? index : bestIdx),
+      0,
+    );
+
+    const bestLabel = classes[bestIndex]?.name?.trim();
+    if (!bestLabel) return;
+    if (lastSentLabelRef.current === bestLabel) return;
+
+    lastSentLabelRef.current = bestLabel;
+    send(bestLabel);
+  }, [activeStep, classes, isConnected, isTrained, probabilities, send]);
+
   const showCameraSwitch = webcamStatus === 'ready' && canSwitchCamera;
 
   const activeStepIndex = Math.max(0, STEP_ORDER.indexOf(activeStep));
@@ -106,6 +132,22 @@ export default function ImageClassification() {
   useEffect(() => {
     stopCollecting();
   }, [activeStep, activeWebcamClassId, stopCollecting]);
+
+  const handleBleClick = useCallback(() => {
+    if (isConnected) {
+      disconnect();
+      return;
+    }
+    setIsModalOpen(true);
+  }, [disconnect, isConnected]);
+
+  const handleSelectDevice = useCallback(
+    (selectedDevice) => {
+      connect(selectedDevice);
+      setIsModalOpen(false);
+    },
+    [connect],
+  );
 
   const handleAddClass = useCallback(() => {
     const nextClass = addClass();
@@ -284,11 +326,19 @@ export default function ImageClassification() {
                 isMirrored={isMirrored}
                 onToggleCamera={toggleFacingMode}
                 captureRef={captureVideoRef}
+                onConnect={handleBleClick}
+                isConnected={isConnected}
+                deviceName={device?.name}
               />
             </section>
           ) : null}
         </main>
       </div>
+      <BluetoothModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelectDevice={handleSelectDevice}
+      />
     </div>
   );
 }

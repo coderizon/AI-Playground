@@ -36,6 +36,9 @@ export default function PreviewPanel({
   isMirrored,
   onToggleCamera,
   captureRef,
+  onConnect,
+  isConnected,
+  deviceName,
 }) {
   return (
     <div className={cx(styles.card, styles['preview-card'])}>
@@ -52,7 +55,12 @@ export default function PreviewPanel({
         <div className={styles['preview-output']}>
           <div className={styles['preview-output-header']}>
             <span>Ausgabe</span>
-            <BluetoothButton />
+            <BluetoothButton
+              label={isConnected ? 'Trennen' : 'Verbinden'}
+              onClick={onConnect}
+              isConnected={isConnected}
+              deviceName={deviceName}
+            />
           </div>
 
           <div className={styles.probabilityList}>
