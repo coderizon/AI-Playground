@@ -72,6 +72,7 @@ export default function BluetoothModal({ isOpen, onClose, onSelectDevice }) {
                   type="button"
                   onClick={() => onSelectDevice?.(device)}
                   style={illustrationStyle}
+                  data-device-id={device.id}
                 >
                   <div className={styles['bluetooth-device-info']}>
                     <span className={styles['bluetooth-device-title']}>{device.name}</span>

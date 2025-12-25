@@ -11,7 +11,7 @@ export const DEVICES = [
     image: '/assets/images/arduino.png',
     imageOffset: {
       right: 0,
-      bottom: 50,
+      bottom: 0,
     },
   },
   {

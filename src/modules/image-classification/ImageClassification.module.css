@@ -833,18 +833,18 @@
   backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 0;
   z-index: 60;
 }
 
 .bluetooth-modal {
   width: min(720px, 94vw);
   max-height: min(720px, 92vh);
-  padding: 8px;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  backdrop-filter: blur(18px);
+  padding: 0;
+  border-radius: 22px;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.18);
   box-sizing: border-box;
 }
@@ -924,6 +924,14 @@
 .bluetooth-device-card {
   --bt-illustration-right-default: -18px;
   --bt-illustration-bottom-default: -18px;
+  --bt-illustration-right-effective: var(
+    --bt-illustration-right-override,
+    var(--bt-illustration-right-adjust, 0px)
+  );
+  --bt-illustration-bottom-effective: var(
+    --bt-illustration-bottom-override,
+    var(--bt-illustration-bottom-adjust, 0px)
+  );
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 20px;
   background: #fff;
@@ -1005,12 +1013,8 @@
 
 .bluetooth-device-illustration {
   position: absolute;
-  right: calc(
-    var(--bt-illustration-right-default) + var(--bt-illustration-right-adjust, 0px)
-  );
-  bottom: calc(
-    var(--bt-illustration-bottom-default) + var(--bt-illustration-bottom-adjust, 0px)
-  );
+  right: calc(var(--bt-illustration-right-default) + var(--bt-illustration-right-effective));
+  bottom: calc(var(--bt-illustration-bottom-default) + var(--bt-illustration-bottom-effective));
   opacity: 0.9;
   pointer-events: none;
   transform: translateZ(0);
@@ -1097,7 +1101,7 @@
 @media (max-width: 600px) {
   .bluetooth-modal {
     width: min(420px, 94vw);
-    padding: 6px;
+    padding: 0;
   }
 
   .bluetooth-modal-surface {
@@ -1111,6 +1115,24 @@
     --bt-illustration-bottom-default: -26px;
   }
 
+  .bluetooth-device-card[data-device-id='calliope'] {
+    --bt-illustration-right-override: 4px;
+    --bt-illustration-bottom-override: -130px;
+  }
+
+<<<<<<< ours
+  .bluetooth-device-card[data-device-id='arduino'] {
+    --bt-illustration-right-override: 0px;
+    --bt-illustration-bottom-override: 0px;
+  }
+
+  .bluetooth-device-card[data-device-id='microbit'] {
+    --bt-illustration-right-override: 0px;
+    --bt-illustration-bottom-override: -85px;
+  }
+
+=======
+>>>>>>> theirs
   .bluetooth-device-image {
     width: clamp(160px, 40vw, 220px);
   }
