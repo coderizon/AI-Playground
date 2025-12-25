@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DEVICES } from '../../../hooks/bluetoothConfig.js';
 import styles from '../ImageClassification.module.css';
@@ -18,6 +18,27 @@ const getIllustrationStyle = (imageOffset) => {
 };
 
 export default function BluetoothModal({ isOpen, onClose, onSelectDevice }) {
+  const [isRendered, setIsRendered] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+      setIsClosing(false);
+      return undefined;
+    }
+
+    if (!isRendered) return undefined;
+
+    setIsClosing(true);
+    const timeoutId = window.setTimeout(() => {
+      setIsRendered(false);
+      setIsClosing(false);
+    }, 180);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen, isRendered]);
+
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -29,7 +50,9 @@ export default function BluetoothModal({ isOpen, onClose, onSelectDevice }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
+
+  const modalState = isClosing ? 'closing' : 'open';
 
   return (
     <div
@@ -38,17 +61,19 @@ export default function BluetoothModal({ isOpen, onClose, onSelectDevice }) {
       aria-modal="true"
       aria-label="Bluetooth Geraete"
       onClick={() => onClose?.()}
+      data-state={modalState}
     >
       <div
         className={styles['bluetooth-modal']}
         role="document"
         onClick={(event) => event.stopPropagation()}
+        data-state={modalState}
       >
         <div className={styles['bluetooth-modal-surface']}>
           <div className={styles['bluetooth-modal-header']}>
             <div>
               <p className={styles['bluetooth-modal-title']}>Verbinden mit</p>
-              <p className={styles['bluetooth-modal-intro']}>Waehle ein Geraet aus der Liste.</p>
+              <p className={styles['bluetooth-modal-intro']}>Wähle ein Geraet aus der Liste.</p>
             </div>
             <button
               className={styles['bluetooth-modal-close']}
