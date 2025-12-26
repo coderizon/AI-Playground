@@ -27,6 +27,7 @@ export default function ClassCard({
   captureRef,
   onToggleWebcam,
   poseOverlay,
+  overlayRenderer,
   onClearExamples,
   canRemoveClass,
   onRemoveClass,
@@ -177,6 +178,7 @@ export default function ClassCard({
             isMirrored={isMirrored}
             onToggleCamera={onToggleCamera}
             poseOverlay={poseOverlay}
+            overlayRenderer={overlayRenderer}
           />
 
           <button

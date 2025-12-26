@@ -120,6 +120,10 @@ export default function LandingPage() {
         navigate('/pose-estimation');
         return;
       }
+      if (model?.id === 'gesichtsmerkmale') {
+        navigate('/face-landmarks');
+        return;
+      }
 
       console.log('[Landing] card', model);
     },

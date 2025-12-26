@@ -37,6 +37,7 @@ export default function PreviewPanel({
   onToggleCamera,
   captureRef,
   poseOverlay,
+  overlayRenderer,
   onConnect,
   isConnected,
   deviceName,
@@ -52,6 +53,7 @@ export default function PreviewPanel({
           onToggleCamera={onToggleCamera}
           variant="preview"
           poseOverlay={poseOverlay}
+          overlayRenderer={overlayRenderer}
         />
 
         <div className={styles['preview-output']}>

@@ -41,6 +41,7 @@ const WebcamCapture = forwardRef(function WebcamCapture(
     variant = 'capture',
     className,
     poseOverlay,
+    overlayRenderer,
   },
   forwardedRef,
 ) {
@@ -84,6 +85,18 @@ const WebcamCapture = forwardRef(function WebcamCapture(
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+    if (typeof overlayRenderer === 'function') {
+      overlayRenderer({
+        ctx,
+        canvas,
+        video,
+        width: cssWidth,
+        height: cssHeight,
+        devicePixelRatio,
+      });
+      return;
+    }
 
     if (!poseOverlay?.keypoints?.length) return;
 
@@ -131,12 +144,12 @@ const WebcamCapture = forwardRef(function WebcamCapture(
       ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [poseOverlay]);
+  }, [overlayRenderer, poseOverlay]);
 
   return (
     <div className={cx(containerClass, isMirrored && styles.mirrored, className)}>
       <StreamVideo ref={setVideoRef} stream={stream} />
-      {poseOverlay ? (
+      {poseOverlay || overlayRenderer ? (
         <canvas ref={overlayRef} className={styles['pose-overlay']} aria-hidden="true" />
       ) : null}
       {showCameraSwitch ? (
