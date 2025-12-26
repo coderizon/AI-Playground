@@ -46,8 +46,17 @@ function drawSquareFrame(videoEl, ctx, imageSize) {
   return true;
 }
 
+function normalizeFeatureOutput(output) {
+  if (!output) return null;
+  if (output instanceof tf.Tensor) return output;
+  if (Array.isArray(output)) return tf.tensor1d(output);
+  if (ArrayBuffer.isView(output)) return tf.tensor1d(Array.from(output));
+  return null;
+}
+
 export function useTransferLearning({
   featureExtractor,
+  extractFeatures,
   featureSize = 1024,
   imageSize = 224,
   videoRef,
@@ -79,8 +88,11 @@ export function useTransferLearning({
   const captureIntervalRef = useRef(null);
   const predictLoopRafRef = useRef(null);
   const lastPredictionUpdateRef = useRef(0);
+  const collectInFlightRef = useRef(false);
+  const predictionInFlightRef = useRef(false);
 
-  const canCollect = modelStatus === 'ready' && isWebcamReady && !isTraining;
+  const hasFeatureExtractor = Boolean(extractFeatures || featureExtractor);
+  const canCollect = modelStatus === 'ready' && isWebcamReady && !isTraining && hasFeatureExtractor;
 
   const canTrain = useMemo(() => {
     if (isTraining) return false;
@@ -237,7 +249,7 @@ export function useTransferLearning({
   );
 
   const flushPendingExamples = useCallback(async () => {
-    if (!featureExtractor) return;
+    if (!extractFeatures && !featureExtractor) return;
 
     const pending = pendingExamplesRef.current;
     if (!pending.length) return;
@@ -246,15 +258,24 @@ export function useTransferLearning({
     setPendingExampleCount(pending.length);
 
     for (const { classIndex, imageData } of pending) {
-      const features = tf.tidy(() => {
-        const image = tf.browser.fromPixels(imageData);
-        const normalized = image.toFloat().div(255).expandDims(0);
+      let features = null;
 
-        const activation = featureExtractor.predict(normalized);
-        const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+      if (extractFeatures) {
+        const output = await extractFeatures(imageData);
+        features = normalizeFeatureOutput(output);
+      } else {
+        features = tf.tidy(() => {
+          const image = tf.browser.fromPixels(imageData);
+          const normalized = image.toFloat().div(255).expandDims(0);
 
-        return activationTensor.squeeze();
-      });
+          const activation = featureExtractor.predict(normalized);
+          const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+
+          return activationTensor.squeeze();
+        });
+      }
+
+      if (!features) continue;
 
       trainingInputsRef.current.push(features);
       trainingLabelsRef.current.push(classIndex);
@@ -263,7 +284,7 @@ export function useTransferLearning({
     }
 
     setPendingExampleCount(0);
-  }, [featureExtractor]);
+  }, [extractFeatures, featureExtractor]);
 
   useEffect(() => {
     if (modelStatus !== 'ready') return;
@@ -271,52 +292,80 @@ export function useTransferLearning({
   }, [modelStatus, flushPendingExamples]);
 
   const collectExample = useCallback(
-    (classIndex) => {
-      const videoEl = videoRef?.current;
+    async (classIndex) => {
+      if (collectInFlightRef.current) return;
+      collectInFlightRef.current = true;
 
-      if (!videoEl) return;
-      if (videoEl.readyState < 2) return;
+      try {
+        const videoEl = videoRef?.current;
 
-      const triggerCaptureHaptic = () => {
-        if (typeof navigator === 'undefined') return;
-        if (typeof navigator.vibrate !== 'function') return;
-        navigator.vibrate(CAPTURE_HAPTIC_MS);
-      };
+        if (!videoEl) return;
+        if (videoEl.readyState < 2) return;
 
-      if (!featureExtractor || modelStatus !== 'ready') {
-        const imageData = captureExampleFrame(videoEl);
-        if (!imageData) return;
-        pendingExamplesRef.current.push({ classIndex, imageData });
-        setPendingExampleCount(pendingExamplesRef.current.length);
-        triggerCaptureHaptic();
-      } else {
-        const capture = drawVideoToCaptureCanvas(videoEl);
-        if (!capture) return;
+        const triggerCaptureHaptic = () => {
+          if (typeof navigator === 'undefined') return;
+          if (typeof navigator.vibrate !== 'function') return;
+          navigator.vibrate(CAPTURE_HAPTIC_MS);
+        };
 
-        const features = tf.tidy(() => {
-          const image = tf.browser.fromPixels(capture.canvas);
-          const normalized = image.toFloat().div(255);
-          const batched = normalized.expandDims(0);
+        let didCapture = false;
 
-          const activation = featureExtractor.predict(batched);
-          const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+        if (modelStatus !== 'ready' || !hasFeatureExtractor) {
+          const imageData = captureExampleFrame(videoEl);
+          if (!imageData) return;
+          pendingExamplesRef.current.push({ classIndex, imageData });
+          setPendingExampleCount(pendingExamplesRef.current.length);
+          triggerCaptureHaptic();
+          didCapture = true;
+        } else {
+          let features = null;
 
-          return activationTensor.squeeze();
-        });
+          if (extractFeatures) {
+            const output = await extractFeatures(videoEl);
+            features = normalizeFeatureOutput(output);
+          } else {
+            const capture = drawVideoToCaptureCanvas(videoEl);
+            if (!capture) return;
 
-        if (!features) return;
-        trainingInputsRef.current.push(features);
-        trainingLabelsRef.current.push(classIndex);
-        triggerCaptureHaptic();
+            features = tf.tidy(() => {
+              const image = tf.browser.fromPixels(capture.canvas);
+              const normalized = image.toFloat().div(255);
+              const batched = normalized.expandDims(0);
+
+              const activation = featureExtractor.predict(batched);
+              const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+
+              return activationTensor.squeeze();
+            });
+          }
+
+          if (!features) return;
+          trainingInputsRef.current.push(features);
+          trainingLabelsRef.current.push(classIndex);
+          triggerCaptureHaptic();
+          didCapture = true;
+        }
+
+        if (!didCapture) return;
+
+        setClasses((prev) =>
+          prev.map((cls, index) =>
+            index === classIndex ? { ...cls, exampleCount: cls.exampleCount + 1 } : cls,
+          ),
+        );
+      } finally {
+        collectInFlightRef.current = false;
       }
-
-      setClasses((prev) =>
-        prev.map((cls, index) =>
-          index === classIndex ? { ...cls, exampleCount: cls.exampleCount + 1 } : cls,
-        ),
-      );
     },
-    [captureExampleFrame, drawVideoToCaptureCanvas, featureExtractor, modelStatus, videoRef],
+    [
+      captureExampleFrame,
+      drawVideoToCaptureCanvas,
+      extractFeatures,
+      featureExtractor,
+      hasFeatureExtractor,
+      modelStatus,
+      videoRef,
+    ],
   );
 
   const stopCollecting = useCallback(() => {
@@ -336,9 +385,11 @@ export function useTransferLearning({
 
       setCollectingClassIndex(classIndex);
 
-      collectExample(classIndex);
+      void collectExample(classIndex);
       captureIntervalRef.current = window.setInterval(
-        () => collectExample(classIndex),
+        () => {
+          void collectExample(classIndex);
+        },
         captureIntervalMs,
       );
     },
@@ -465,7 +516,14 @@ export function useTransferLearning({
     }
 
     const numClasses = classes.length;
-    const inputDim = featureSize;
+    const inferredInputDim = inputs[0]?.shape?.[0] ?? inputs[0]?.shape?.at(-1);
+    const inputDim = inferredInputDim ?? featureSize;
+
+    if (!inputDim) {
+      setIsTraining(false);
+      console.warn('[ImageClassification] Unable to infer input dimension.');
+      return false;
+    }
 
     const model = createTransferModel({ inputDim, numClasses, learningRate });
 
@@ -522,11 +580,12 @@ export function useTransferLearning({
     if (!shouldPredict) return undefined;
     if (!isTrained) return undefined;
     if (!transferModelRef.current) return undefined;
-    if (!featureExtractor) return undefined;
+    if (!hasFeatureExtractor) return undefined;
     if (!videoRef?.current) return undefined;
     if (isTraining) return undefined;
 
     let cancelled = false;
+    predictionInFlightRef.current = false;
 
     const loop = () => {
       if (cancelled) return;
@@ -534,28 +593,63 @@ export function useTransferLearning({
       const videoEl = videoRef?.current;
       const model = transferModelRef.current;
 
-      if (videoEl?.readyState >= 2 && featureExtractor && model) {
+      if (videoEl?.readyState >= 2 && model) {
         const now = performance.now();
-        if (now - lastPredictionUpdateRef.current > predictionThrottleMs) {
-          const capture = drawVideoToCaptureCanvas(videoEl);
-          if (capture) {
-            const next = tf.tidy(() => {
-              const image = tf.browser.fromPixels(capture.canvas);
-              const normalized = image.toFloat().div(255);
-              const batched = normalized.expandDims(0);
+        if (
+          now - lastPredictionUpdateRef.current > predictionThrottleMs &&
+          !predictionInFlightRef.current
+        ) {
+          predictionInFlightRef.current = true;
 
-              const activation = featureExtractor.predict(batched);
-              const activationTensor = Array.isArray(activation) ? activation[0] : activation;
-              const logits = model.predict(activationTensor);
-              const logitsTensor = Array.isArray(logits) ? logits[0] : logits;
+          const runPrediction = async () => {
+            let next = null;
 
-              const prediction = logitsTensor.squeeze();
-              return Array.from(prediction.dataSync());
-            });
+            try {
+              if (extractFeatures) {
+                const output = await extractFeatures(videoEl);
+                const features = normalizeFeatureOutput(output);
+                if (!features) return;
 
+                next = tf.tidy(() => {
+                  const batched = features.expandDims(0);
+                  const logits = model.predict(batched);
+                  const logitsTensor = Array.isArray(logits) ? logits[0] : logits;
+
+                  const prediction = logitsTensor.squeeze();
+                  return Array.from(prediction.dataSync());
+                });
+
+                features.dispose();
+              } else if (featureExtractor) {
+                const capture = drawVideoToCaptureCanvas(videoEl);
+                if (capture) {
+                  next = tf.tidy(() => {
+                    const image = tf.browser.fromPixels(capture.canvas);
+                    const normalized = image.toFloat().div(255);
+                    const batched = normalized.expandDims(0);
+
+                    const activation = featureExtractor.predict(batched);
+                    const activationTensor = Array.isArray(activation) ? activation[0] : activation;
+                    const logits = model.predict(activationTensor);
+                    const logitsTensor = Array.isArray(logits) ? logits[0] : logits;
+
+                    const prediction = logitsTensor.squeeze();
+                    return Array.from(prediction.dataSync());
+                  });
+                }
+              }
+            } catch (error) {
+              console.error(error);
+            } finally {
+              predictionInFlightRef.current = false;
+            }
+
+            if (cancelled || !next) return;
             setProbabilities(next);
-            lastPredictionUpdateRef.current = now;
-          }
+            lastPredictionUpdateRef.current = performance.now();
+          };
+
+          void runPrediction();
         }
       }
 
@@ -566,6 +660,7 @@ export function useTransferLearning({
 
     return () => {
       cancelled = true;
+      predictionInFlightRef.current = false;
       if (predictLoopRafRef.current) {
         window.cancelAnimationFrame(predictLoopRafRef.current);
         predictLoopRafRef.current = null;
@@ -573,7 +668,9 @@ export function useTransferLearning({
     };
   }, [
     drawVideoToCaptureCanvas,
+    extractFeatures,
     featureExtractor,
+    hasFeatureExtractor,
     isTraining,
     isTrained,
     predictionThrottleMs,

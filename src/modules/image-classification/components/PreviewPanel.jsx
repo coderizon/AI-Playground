@@ -36,6 +36,7 @@ export default function PreviewPanel({
   isMirrored,
   onToggleCamera,
   captureRef,
+  poseOverlay,
   onConnect,
   isConnected,
   deviceName,
@@ -50,6 +51,7 @@ export default function PreviewPanel({
           isMirrored={isMirrored}
           onToggleCamera={onToggleCamera}
           variant="preview"
+          poseOverlay={poseOverlay}
         />
 
         <div className={styles['preview-output']}>

@@ -116,6 +116,10 @@ export default function LandingPage() {
         navigate('/image-classification');
         return;
       }
+      if (model?.id === 'posenerkennung') {
+        navigate('/pose-estimation');
+        return;
+      }
 
       console.log('[Landing] card', model);
     },
