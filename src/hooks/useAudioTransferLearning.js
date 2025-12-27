@@ -453,6 +453,7 @@ export function useAudioTransferLearning({
     normalizeClassName,
     clearClassExamples,
     removeClass,
+    train,
     startCollecting,
     stopCollecting,
     startListening,
