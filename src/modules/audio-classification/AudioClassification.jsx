@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import { useAudioTransferLearning } from '../../hooks/useAudioTransferLearning.js';
@@ -41,6 +41,7 @@ export default function AudioClassification() {
   const [epochs, setEpochs] = useState(30);
   const [batchSize, setBatchSize] = useState(16);
   const [learningRate, setLearningRate] = useState(0.001);
+  const hasStartedListeningRef = useRef(false);
 
   const {
     status,
@@ -81,8 +82,13 @@ export default function AudioClassification() {
   useEffect(() => {
     if (activeStep !== 'test') {
       void stopListening();
+      hasStartedListeningRef.current = false;
+      return;
     }
-  }, [activeStep, stopListening]);
+    if (!isTrained || isTraining || isListening || hasStartedListeningRef.current) return;
+    hasStartedListeningRef.current = true;
+    void startListening();
+  }, [activeStep, isListening, isTraining, isTrained, startListening, stopListening]);
 
   useEffect(() => {
     if (activeStep !== 'data') {
@@ -335,7 +341,7 @@ export default function AudioClassification() {
                     <SpectrogramCanvas spectrogramRef={spectrogramRef} isActive={isListening} />
                     {!isListening ? (
                       <div className={styles['spectrogram-overlay']}>
-                        Test starten, um Live-Audio zu sehen.
+                        Live-Audio wird gestartet. Mikrofonzugriff erlauben.
                       </div>
                     ) : null}
                   </div>
@@ -343,20 +349,9 @@ export default function AudioClassification() {
                   <div className={styles['audio-output']}>
                     <div className={styles['preview-output-header']}>
                       <span>Ausgabe</span>
-                      <button
-                        className={styles.primary}
-                        type="button"
-                        onClick={() => {
-                          if (isListening) {
-                            void stopListening();
-                          } else {
-                            void startListening();
-                          }
-                        }}
-                        disabled={!isTrained || isTraining}
-                      >
-                        {isListening ? 'Test stoppen' : 'Test starten'}
-                      </button>
+                      <span className={styles['spectrogram-meta']}>
+                        {isListening ? 'Live' : 'Wird gestartet…'}
+                      </span>
                     </div>
 
                     <div className={styles.probabilityList}>
