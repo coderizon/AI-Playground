@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
+import { useBluetooth } from '../../hooks/useBluetooth.js';
 import { useAudioTransferLearning } from '../../hooks/useAudioTransferLearning.js';
+import BluetoothModal from '../image-classification/components/BluetoothModal.jsx';
+import BluetoothButton from '../image-classification/components/BluetoothButton.jsx';
 import TrainingPanel from '../image-classification/components/TrainingPanel.jsx';
 import AudioClassCard from './components/AudioClassCard.jsx';
 import LossSparkline from './components/LossSparkline.jsx';
@@ -42,6 +45,10 @@ export default function AudioClassification() {
   const [batchSize, setBatchSize] = useState(16);
   const [learningRate, setLearningRate] = useState(0.001);
   const hasStartedListeningRef = useRef(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const lastSentLabelRef = useRef(null);
+
+  const { connect, disconnect, send, isConnected, device } = useBluetooth();
 
   const {
     status,
@@ -52,6 +59,7 @@ export default function AudioClassification() {
     collectingClassId,
     recordingProgress,
     recordingSecondsLeft,
+    recordingDurationSeconds,
     isTraining,
     trainingPercent,
     lossHistory,
@@ -96,6 +104,26 @@ export default function AudioClassification() {
     }
   }, [activeStep, stopCollecting]);
 
+  useEffect(() => {
+    if (!isConnected || activeStep !== 'test' || !isTrained) {
+      lastSentLabelRef.current = null;
+      return;
+    }
+    if (!classes.length || !probabilities.length) return;
+
+    const bestIndex = probabilities.reduce(
+      (bestIdx, value, index) => (value > probabilities[bestIdx] ? index : bestIdx),
+      0,
+    );
+
+    const bestLabel = classes[bestIndex]?.name?.trim();
+    if (!bestLabel) return;
+    if (lastSentLabelRef.current === bestLabel) return;
+
+    lastSentLabelRef.current = bestLabel;
+    send(bestLabel);
+  }, [activeStep, classes, isConnected, isTrained, probabilities, send]);
+
   const modelStatusMessage = useMemo(() => {
     if (status === 'loading') {
       return 'Modell wird geladen. Audioaufnahme ist gleich verfügbar.';
@@ -128,6 +156,22 @@ export default function AudioClassification() {
       removeClass(classIndex, classId);
     },
     [classes.length, removeClass],
+  );
+
+  const handleBleClick = useCallback(() => {
+    if (isConnected) {
+      disconnect();
+      return;
+    }
+    setIsModalOpen(true);
+  }, [disconnect, isConnected]);
+
+  const handleSelectDevice = useCallback(
+    (selectedDevice) => {
+      connect(selectedDevice);
+      setIsModalOpen(false);
+    },
+    [connect],
   );
 
   const statusBanner =
@@ -238,7 +282,12 @@ export default function AudioClassification() {
                       <span>Aufnahme läuft…</span>
                       <span>{recordingSecondsLeft}s</span>
                     </div>
-                    <div className={styles['recording-progress-bar']}>
+                    <div
+                      className={styles['recording-progress-bar']}
+                      style={{
+                        '--recording-ticks': Math.max(1, recordingDurationSeconds),
+                      }}
+                    >
                       <div
                         className={styles['recording-progress-fill']}
                         style={{ width: `${recordingProgress}%` }}
@@ -349,10 +398,16 @@ export default function AudioClassification() {
                   <div className={styles['audio-output']}>
                     <div className={styles['preview-output-header']}>
                       <span>Ausgabe</span>
-                      <span className={styles['spectrogram-meta']}>
-                        {isListening ? 'Live' : 'Wird gestartet…'}
-                      </span>
+                      <BluetoothButton
+                        label={isConnected ? 'Trennen' : 'Verbinden'}
+                        onClick={handleBleClick}
+                        isConnected={isConnected}
+                        deviceName={device?.name}
+                      />
                     </div>
+                    <span className={styles['spectrogram-meta']}>
+                      {isListening ? 'Live' : 'Wird gestartet…'}
+                    </span>
 
                     <div className={styles.probabilityList}>
                       {classes.map((cls, index) => {
@@ -389,6 +444,11 @@ export default function AudioClassification() {
           ) : null}
         </main>
       </div>
+      <BluetoothModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelectDevice={handleSelectDevice}
+      />
     </div>
   );
 }

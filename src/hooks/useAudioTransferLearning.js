@@ -13,6 +13,7 @@ const AUDIO_TRACK_CONSTRAINTS = {
 };
 
 function getDefaultClassName(index) {
+  if (index === 0) return 'Hintergrundgeräusche';
   return `Klasse ${index + 1}`;
 }
 
@@ -44,6 +45,9 @@ export function useAudioTransferLearning({
   const [collectingClassId, setCollectingClassId] = useState(null);
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [recordingSecondsLeft, setRecordingSecondsLeft] = useState(0);
+  const [recordingDurationSeconds, setRecordingDurationSeconds] = useState(
+    DEFAULT_RECORDING_DURATION_SEC,
+  );
   const [isTraining, setIsTraining] = useState(false);
   const [trainingPercent, setTrainingPercent] = useState(0);
   const [lossHistory, setLossHistory] = useState([]);
@@ -179,6 +183,7 @@ export function useAudioTransferLearning({
     setCollectingClassId(null);
     setRecordingProgress(0);
     setRecordingSecondsLeft(0);
+    setRecordingDurationSeconds(DEFAULT_RECORDING_DURATION_SEC);
   }, []);
 
   const startCollecting = useCallback(
@@ -199,16 +204,18 @@ export function useAudioTransferLearning({
 
       setCollectingClassId(classId);
       setRecordingProgress(0);
+      setRecordingDurationSeconds(durationSeconds);
       setRecordingSecondsLeft(durationSeconds);
 
       const startTimestamp = performance.now();
       if (progressIntervalRef.current) window.clearInterval(progressIntervalRef.current);
       progressIntervalRef.current = window.setInterval(() => {
-        const elapsed = (performance.now() - startTimestamp) / 1000;
-        const percent = Math.min(100, Math.round((elapsed / durationSeconds) * 100));
+        const elapsedSeconds = Math.floor((performance.now() - startTimestamp) / 1000);
+        const clampedSeconds = Math.min(durationSeconds, Math.max(0, elapsedSeconds));
+        const percent = Math.round((clampedSeconds / durationSeconds) * 100);
         setRecordingProgress(percent);
-        setRecordingSecondsLeft(Math.max(0, Math.ceil(durationSeconds - elapsed)));
-      }, 120);
+        setRecordingSecondsLeft(Math.max(0, durationSeconds - clampedSeconds));
+      }, 1000);
 
       try {
         while (!session.cancelled) {
@@ -438,6 +445,7 @@ export function useAudioTransferLearning({
     collectingClassId,
     recordingProgress,
     recordingSecondsLeft,
+    recordingDurationSeconds,
     isTraining,
     trainingPercent,
     lossHistory,
