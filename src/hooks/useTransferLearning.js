@@ -25,9 +25,13 @@ function getDefaultClassName(index) {
   return `Klasse ${index + 1}`;
 }
 
-function makeDefaultClass(index) {
+function createClassId() {
+  return `class-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function makeDefaultClass(index, id = createClassId()) {
   return {
-    id: `class-${Date.now()}-${Math.random().toString(16).slice(2)}-${index}`,
+    id,
     name: getDefaultClassName(index),
     exampleCount: 0,
   };
@@ -186,16 +190,12 @@ export function useTransferLearning({
   }, []);
 
   const addClass = useCallback(() => {
-    let nextClass = null;
+    const nextId = createClassId();
 
-    setClasses((prev) => {
-      nextClass = makeDefaultClass(prev.length);
-      return [...prev, nextClass];
-    });
-
+    setClasses((prev) => [...prev, makeDefaultClass(prev.length, nextId)]);
     resetTrainingState();
 
-    return nextClass;
+    return { id: nextId };
   }, [resetTrainingState]);
 
   useEffect(() => {
