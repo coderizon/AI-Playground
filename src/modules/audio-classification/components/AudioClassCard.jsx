@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Mic, MoreVertical } from 'lucide-react';
 
+import SpectrogramCanvas from './SpectrogramCanvas.jsx';
 import styles from '../../image-classification/ImageClassification.module.css';
 
 function cx(...classes) {
@@ -12,11 +13,16 @@ export default function AudioClassCard({
   classNameValue,
   exampleCount,
   isCollecting,
+  spectrogramRef,
+  recordingProgress,
+  recordingSecondsLeft,
+  recordingDurationSeconds,
   canCollect,
   onClassNameChange,
   onClassNameFocus,
   onClassNameBlur,
   onCollect,
+  onCollectStop,
   onClearExamples,
   canRemoveClass,
   onRemoveClass,
@@ -103,23 +109,56 @@ export default function AudioClassCard({
         </div>
       </div>
 
-      <button
-        className={cx(styles.primary, styles.block, styles['audio-record-button'])}
-        type="button"
-        disabled={!canCollect}
-        onClick={onCollect}
-        aria-pressed={isCollecting}
-      >
-        <Mic className={styles['audio-record-icon']} aria-hidden="true" />
-        {isCollecting ? 'Aufnahme läuft…' : '10s aufnehmen'}
-      </button>
+      <div className={styles['audio-card-body']}>
+        <div className={styles['spectrogram-frame']}>
+          <SpectrogramCanvas spectrogramRef={spectrogramRef} isActive={isCollecting} />
+        </div>
 
-      <div className={styles['count-row']}>
-        <div className={cx(styles['count-box'], isCollecting && styles.recording)}>
-          <div className={styles['count-meta']}>
-            <span className={styles['count-label']}>Anzahl Beispiele</span>
+        <button
+          className={cx(styles.primary, styles.block, styles['audio-record-button'])}
+          type="button"
+          disabled={!canCollect}
+          onClick={onCollect}
+          aria-pressed={isCollecting}
+        >
+          <Mic className={styles['audio-record-icon']} aria-hidden="true" />
+          {isCollecting ? 'Aufnahme läuft…' : '10s aufnehmen'}
+        </button>
+
+        {isCollecting ? (
+          <div className={styles['recording-progress']}>
+            <div className={styles['recording-progress-meta']}>
+              <span>Aufnahme läuft…</span>
+              <span>{recordingSecondsLeft}s</span>
+            </div>
+            <div
+              className={styles['recording-progress-bar']}
+              style={{
+                '--recording-ticks': Math.max(1, recordingDurationSeconds ?? 1),
+              }}
+            >
+              <div
+                className={styles['recording-progress-fill']}
+                style={{ width: `${recordingProgress}%` }}
+              />
+            </div>
+            <button
+              className={styles['recording-stop']}
+              type="button"
+              onClick={onCollectStop}
+            >
+              Aufnahme stoppen
+            </button>
           </div>
-          <div className={styles['count-number']}>{exampleCount}</div>
+        ) : null}
+
+        <div className={styles['count-row']}>
+          <div className={cx(styles['count-box'], isCollecting && styles.recording)}>
+            <div className={styles['count-meta']}>
+              <span className={styles['count-label']}>Anzahl Beispiele</span>
+            </div>
+            <div className={styles['count-number']}>{exampleCount}</div>
+          </div>
         </div>
       </div>
     </div>

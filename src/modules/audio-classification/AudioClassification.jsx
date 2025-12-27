@@ -256,65 +256,22 @@ export default function AudioClassification() {
             <section className={styles['classes-column']}>
               {statusBanner}
 
-              <div className={cx(styles.card, styles['spectrogram-card'])}>
-                <div className={styles['card-header']}>
-                  <h3>Spektrogramm</h3>
-                  <span className={styles['spectrogram-meta']}>
-                    {collectingClassId ? 'Aufnahme läuft' : 'Bereit'}
-                  </span>
-                </div>
-
-                <div className={styles['spectrogram-frame']}>
-                  <SpectrogramCanvas
-                    spectrogramRef={spectrogramRef}
-                    isActive={Boolean(collectingClassId)}
-                  />
-                  {!collectingClassId ? (
-                    <div className={styles['spectrogram-overlay']}>
-                      Tippe auf „10s aufnehmen“, um das Mikrofon zu starten.
-                    </div>
-                  ) : null}
-                </div>
-
-                {collectingClassId ? (
-                  <div className={styles['recording-progress']}>
-                    <div className={styles['recording-progress-meta']}>
-                      <span>Aufnahme läuft…</span>
-                      <span>{recordingSecondsLeft}s</span>
-                    </div>
-                    <div
-                      className={styles['recording-progress-bar']}
-                      style={{
-                        '--recording-ticks': Math.max(1, recordingDurationSeconds),
-                      }}
-                    >
-                      <div
-                        className={styles['recording-progress-fill']}
-                        style={{ width: `${recordingProgress}%` }}
-                      />
-                    </div>
-                    <button
-                      className={styles['recording-stop']}
-                      type="button"
-                      onClick={stopCollecting}
-                    >
-                      Aufnahme stoppen
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-
               {classes.map((cls, index) => (
                 <AudioClassCard
                   key={cls.id}
                   classNameValue={cls.name}
                   exampleCount={counts[index] ?? 0}
                   isCollecting={collectingClassId === cls.id}
+                  spectrogramRef={spectrogramRef}
+                  recordingProgress={recordingProgress}
+                  recordingSecondsLeft={recordingSecondsLeft}
+                  recordingDurationSeconds={recordingDurationSeconds}
                   canCollect={canCollect}
                   onClassNameChange={(event) => updateClassName(index, event.target.value)}
                   onClassNameFocus={() => clearDefaultClassName(index)}
                   onClassNameBlur={() => normalizeClassName(index)}
                   onCollect={() => startCollecting(cls.id)}
+                  onCollectStop={stopCollecting}
                   onClearExamples={() => clearClassExamples(cls.id)}
                   canRemoveClass={classes.length > 1}
                   onRemoveClass={() => handleRemoveClass(index, cls.id)}

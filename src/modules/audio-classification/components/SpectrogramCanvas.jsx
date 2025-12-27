@@ -29,44 +29,41 @@ export default function SpectrogramCanvas({ spectrogramRef, isActive }) {
     };
 
     resize();
+    ctx.fillStyle = '#0f1115';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
 
-    const draw = () => {
-      const width = canvas.width;
-      const height = canvas.height;
+    if (isActive) {
+      const draw = () => {
+        const width = canvas.width;
+        const height = canvas.height;
 
-      ctx.fillStyle = '#0f1115';
+        ctx.fillStyle = '#0f1115';
+        ctx.drawImage(canvas, -1, 0);
+        ctx.fillRect(width - 1, 0, 1, height);
 
-      if (!isActive) {
-        ctx.fillRect(0, 0, width, height);
-        rafRef.current = window.requestAnimationFrame(draw);
-        return;
-      }
+        const spectrogram = spectrogramRef?.current;
+        if (spectrogram?.data && spectrogram?.frameSize) {
+          const { data, frameSize } = spectrogram;
+          const frameOffset = Math.max(0, data.length - frameSize);
+          const binHeight = height / frameSize;
 
-      ctx.drawImage(canvas, -1, 0);
-      ctx.fillRect(width - 1, 0, 1, height);
-
-      const spectrogram = spectrogramRef?.current;
-      if (spectrogram?.data && spectrogram?.frameSize) {
-        const { data, frameSize } = spectrogram;
-        const frameOffset = Math.max(0, data.length - frameSize);
-        const binHeight = height / frameSize;
-
-        for (let i = 0; i < frameSize; i += 1) {
-          const intensity = normalizeDb(data[frameOffset + i]);
-          const hue = 220 - intensity * 160;
-          const light = 18 + intensity * 55;
-          ctx.fillStyle = `hsl(${hue} 90% ${light}%)`;
-          const y = height - (i + 1) * binHeight;
-          ctx.fillRect(width - 1, y, 1, binHeight + 0.6);
+          for (let i = 0; i < frameSize; i += 1) {
+            const intensity = normalizeDb(data[frameOffset + i]);
+            const hue = 220 - intensity * 160;
+            const light = 18 + intensity * 55;
+            ctx.fillStyle = `hsl(${hue} 90% ${light}%)`;
+            const y = height - (i + 1) * binHeight;
+            ctx.fillRect(width - 1, y, 1, binHeight + 0.6);
+          }
         }
-      }
+
+        rafRef.current = window.requestAnimationFrame(draw);
+      };
 
       rafRef.current = window.requestAnimationFrame(draw);
-    };
-
-    rafRef.current = window.requestAnimationFrame(draw);
+    }
 
     return () => {
       if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
