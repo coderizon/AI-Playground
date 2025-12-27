@@ -1278,5 +1278,153 @@
   margin-inline: auto;
 }
 
+.audio-output {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
 .probability-row {
+}
+
+.spectrogram-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spectrogram-meta {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.spectrogram-frame {
+  position: relative;
+  width: 100%;
+  height: clamp(160px, 28vw, 220px);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f1115;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.spectrogram-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.spectrogram-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(15, 17, 21, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.recording-progress {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recording-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.recording-progress-bar {
+  height: 12px;
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.recording-progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #3f73ff, #2554d3);
+  width: 0%;
+  transition: width 0.2s;
+}
+
+.recording-stop {
+  align-self: flex-end;
+  border: 1px solid rgba(185, 28, 28, 0.4);
+  background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recording-stop:hover {
+  background: rgba(254, 226, 226, 0.98);
+}
+
+.audio-record-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  font-size: 15px;
+}
+
+.audio-record-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.audio-card-active {
+  border-color: rgba(37, 99, 235, 0.4);
+  box-shadow: 0 18px 42px rgba(37, 99, 235, 0.16);
+}
+
+.loss-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loss-chart-shell {
+  height: 120px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 10px;
+}
+
+.loss-chart {
+  width: 100%;
+  height: 100%;
+}
+
+.loss-line {
+  stroke: #3f73ff;
+  stroke-width: 2;
+}
+
+.loss-empty {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.loss-value {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(37, 99, 235, 0.8);
 }

@@ -124,6 +124,10 @@ export default function LandingPage() {
         navigate('/face-landmarks');
         return;
       }
+      if (model?.id === 'audioerkennung') {
+        navigate('/audio-classification');
+        return;
+      }
 
       console.log('[Landing] card', model);
     },

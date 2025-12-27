@@ -4,12 +4,14 @@ import ImageClassification from './modules/image-classification/ImageClassificat
 import FaceLandmarks from './modules/face-landmarks/FaceLandmarks.jsx';
 import LandingPage from './modules/landing/LandingPage.jsx';
 import PoseEstimation from './modules/pose-estimation/PoseEstimation.jsx';
+import AudioClassification from './modules/audio-classification/AudioClassification.jsx';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/image-classification" element={<ImageClassification />} />
+      <Route path="/audio-classification" element={<AudioClassification />} />
       <Route path="/pose-estimation" element={<PoseEstimation />} />
       <Route path="/face-landmarks" element={<FaceLandmarks />} />
       <Route path="*" element={<Navigate to="/" replace />} />
