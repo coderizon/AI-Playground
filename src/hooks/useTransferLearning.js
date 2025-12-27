@@ -94,9 +94,23 @@ export function useTransferLearning({
   const lastPredictionUpdateRef = useRef(0);
   const collectInFlightRef = useRef(false);
   const predictionInFlightRef = useRef(false);
+  const tfReadyRef = useRef(null);
+
+  const ensureTensorFlowReady = useCallback(async () => {
+    if (!tfReadyRef.current) {
+      tfReadyRef.current = (async () => {
+        await tf.ready();
+      })();
+    }
+    return tfReadyRef.current;
+  }, []);
 
   const hasFeatureExtractor = Boolean(extractFeatures || featureExtractor);
   const canCollect = modelStatus === 'ready' && isWebcamReady && !isTraining && hasFeatureExtractor;
+
+  useEffect(() => {
+    void ensureTensorFlowReady();
+  }, [ensureTensorFlowReady]);
 
   const canTrain = useMemo(() => {
     if (isTraining) return false;
@@ -254,6 +268,8 @@ export function useTransferLearning({
     const pending = pendingExamplesRef.current;
     if (!pending.length) return;
 
+    await ensureTensorFlowReady();
+
     pendingExamplesRef.current = [];
     setPendingExampleCount(pending.length);
 
@@ -284,7 +300,7 @@ export function useTransferLearning({
     }
 
     setPendingExampleCount(0);
-  }, [extractFeatures, featureExtractor]);
+  }, [ensureTensorFlowReady, extractFeatures, featureExtractor]);
 
   useEffect(() => {
     if (modelStatus !== 'ready') return;
@@ -319,6 +335,8 @@ export function useTransferLearning({
           didCapture = true;
         } else {
           let features = null;
+
+          await ensureTensorFlowReady();
 
           if (extractFeatures) {
             const output = await extractFeatures(videoEl);
@@ -360,6 +378,7 @@ export function useTransferLearning({
     [
       captureExampleFrame,
       drawVideoToCaptureCanvas,
+      ensureTensorFlowReady,
       extractFeatures,
       featureExtractor,
       hasFeatureExtractor,
@@ -495,6 +514,7 @@ export function useTransferLearning({
   const train = useCallback(async () => {
     if (!canTrain) return false;
 
+    await ensureTensorFlowReady();
     stopCollecting();
     await flushPendingExamples();
     setIsTraining(true);
@@ -568,6 +588,7 @@ export function useTransferLearning({
     batchSize,
     canTrain,
     classes.length,
+    ensureTensorFlowReady,
     epochs,
     featureSize,
     flushPendingExamples,
@@ -605,6 +626,8 @@ export function useTransferLearning({
             let next = null;
 
             try {
+              await ensureTensorFlowReady();
+
               if (extractFeatures) {
                 const output = await extractFeatures(videoEl);
                 const features = normalizeFeatureOutput(output);
@@ -668,6 +691,7 @@ export function useTransferLearning({
     };
   }, [
     drawVideoToCaptureCanvas,
+    ensureTensorFlowReady,
     extractFeatures,
     featureExtractor,
     hasFeatureExtractor,
