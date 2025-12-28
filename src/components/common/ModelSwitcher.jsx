@@ -11,6 +11,11 @@ const MODELS = [
     path: '/image-classification',
   },
   {
+    id: 'object-detection',
+    label: 'Objektdetektion',
+    path: '/object-detection',
+  },
+  {
     id: 'pose-estimation',
     label: 'Posenerkennung',
     path: '/pose-estimation',

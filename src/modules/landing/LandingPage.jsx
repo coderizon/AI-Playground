@@ -91,6 +91,10 @@ export default function LandingPage() {
         navigate('/image-classification');
         return;
       }
+      if (model?.id === 'objektdetektion') {
+        navigate('/object-detection');
+        return;
+      }
       if (model?.id === 'posenerkennung') {
         navigate('/pose-estimation');
         return;
