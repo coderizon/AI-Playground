@@ -26,6 +26,11 @@ const MODELS = [
     path: '/face-landmarks',
   },
   {
+    id: 'hand-gestures',
+    label: 'Gestenerkennung',
+    path: '/gestenerkennung',
+  },
+  {
     id: 'audio-classification',
     label: 'Audioerkennung',
     path: '/audio-classification',

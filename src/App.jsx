@@ -6,6 +6,7 @@ import LandingPage from './modules/landing/LandingPage.jsx';
 import PoseEstimation from './modules/pose-estimation/PoseEstimation.jsx';
 import AudioClassification from './modules/audio-classification/AudioClassification.jsx';
 import ObjectDetection from './modules/object-detection/ObjectDetection.jsx';
+import HandGestures from './modules/hand-gestures/HandGestures.jsx';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
       <Route path="/audio-classification" element={<AudioClassification />} />
       <Route path="/pose-estimation" element={<PoseEstimation />} />
       <Route path="/face-landmarks" element={<FaceLandmarks />} />
+      <Route path="/gestenerkennung" element={<HandGestures />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

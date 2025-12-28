@@ -103,6 +103,10 @@ export default function LandingPage() {
         navigate('/face-landmarks');
         return;
       }
+      if (model?.id === 'gestenerkennung') {
+        navigate('/gestenerkennung');
+        return;
+      }
       if (model?.id === 'audioerkennung') {
         navigate('/audio-classification');
         return;
