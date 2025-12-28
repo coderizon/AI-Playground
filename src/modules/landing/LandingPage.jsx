@@ -66,36 +66,6 @@ const MODELS = [
     tags: [{ label: 'Trainierbar', variant: 'primary' }],
     hasHero: true,
   },
-  {
-    id: 'microbit',
-    mode: 'device',
-    title: 'micro:bit',
-    description: 'Mit micro:bit verbinden und testen.',
-    imageSrc: '/assets/images/microbit.png',
-    imageAlt: 'micro:bit Vorschau',
-    tags: [{ label: 'BLE connect' }],
-    hasHero: true,
-  },
-  {
-    id: 'calliope',
-    mode: 'device',
-    title: 'Calliope mini',
-    description: 'Mit Calliope verbinden und testen.',
-    imageSrc: '/assets/images/calliope.png',
-    imageAlt: 'Calliope mini Vorschau',
-    tags: [{ label: 'BLE connect' }],
-    hasHero: true,
-  },
-  {
-    id: 'arduino',
-    mode: 'device',
-    title: 'Arduino',
-    description: 'Arduino-Integration vorbereiten.',
-    imageSrc: '/assets/images/arduino.png',
-    imageAlt: 'Arduino Vorschau',
-    tags: [{ label: 'In Planung' }],
-    hasHero: true,
-  },
 ];
 
 export default function LandingPage() {
