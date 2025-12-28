@@ -13,7 +13,7 @@ const MODELS = [
     description: 'Bilder automatisch klassifizieren.',
     imageSrc: '/assets/images/Bildklassifikation.png',
     imageAlt: 'Bildklassifikation Vorschau',
-    tags: [{ label: 'Trainierbar', variant: 'primary' }, { label: 'BLE connect' }],
+    tags: [{ label: 'Trainierbar', variant: 'primary' }],
     hasHero: true,
   },
   {
@@ -23,7 +23,10 @@ const MODELS = [
     description: 'Objekte in Bildern erkennen.',
     imageSrc: '/assets/images/objektdetektion.png',
     imageAlt: 'Objektdetektion Vorschau',
-    tags: [{ label: 'Trainierbar', variant: 'primary' }, { label: 'Live' }],
+    tags: [
+      { label: 'Nur Ausführbar', variant: 'warning' },
+      { label: 'Plus', variant: 'success' },
+    ],
     hasHero: true,
   },
   {
@@ -33,7 +36,7 @@ const MODELS = [
     description: 'Körperhaltung und Gelenkpunkte erkennen.',
     imageSrc: '/assets/images/posenerkennung.png',
     imageAlt: 'Posenerkennung Vorschau',
-    tags: [{ label: 'Live' }],
+    tags: [{ label: 'Trainierbar', variant: 'primary' }],
     hasHero: true,
   },
   {
@@ -43,7 +46,10 @@ const MODELS = [
     description: 'Gesichtsmerkmale analysieren.',
     imageSrc: '/assets/images/Gesichtsmerkmale.png',
     imageAlt: 'Gesichtsmerkmale Vorschau',
-    tags: [{ label: 'Live' }],
+    tags: [
+      { label: 'Trainierbar', variant: 'primary' },
+      { label: 'Plus', variant: 'success' },
+    ],
     hasHero: true,
   },
   {
@@ -53,7 +59,10 @@ const MODELS = [
     description: 'Gesten per Kamera erkennen.',
     imageSrc: '/assets/images/Gestenerkennung.png',
     imageAlt: 'Gestenerkennung Vorschau',
-    tags: [{ label: 'Live' }],
+    tags: [
+      { label: 'Trainierbar', variant: 'primary' },
+      { label: 'Plus', variant: 'success' },
+    ],
     hasHero: true,
   },
   {
@@ -74,10 +83,6 @@ export default function LandingPage() {
 
   const handleMenuClick = useCallback(() => {
     setIsNavOpen((prev) => !prev);
-  }, []);
-
-  const handleSearchClick = useCallback(() => {
-    console.log('[Landing] search');
   }, []);
 
   const handleCardActivate = useCallback(
@@ -139,19 +144,6 @@ export default function LandingPage() {
           <img className="identity-logo" src="/assets/images/cr.png" alt="Code Rizon Logo" />
           <span className="identity-word accent">Playground</span>
         </div>
-
-        <button
-          className="search-pill"
-          type="button"
-          data-mode="image"
-          aria-label="Suche KI-Modell"
-          onClick={handleSearchClick}
-        >
-          <span className="search-label">Suche KI-Modell</span>
-          <span className="pill-arrow" aria-hidden="true">
-            {'>'}
-          </span>
-        </button>
 
         <div className="model-marquee" role="list">
           <div className="model-track">

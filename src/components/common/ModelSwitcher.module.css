@@ -1,0 +1,89 @@
+.switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.switcherButton {
+  appearance: none;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font: inherit;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.switcherButton:hover {
+  background: rgba(37, 99, 235, 0.16);
+}
+
+.switcherButton:active {
+  transform: translateY(0);
+}
+
+.switcherButton:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
+.caret {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 220px;
+  max-width: min(260px, 80vw);
+  background: #ffffff;
+  border: 1px solid #e6eaf5;
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 22px 60px rgba(14, 22, 48, 0.14);
+  display: grid;
+  gap: 4px;
+  z-index: 30;
+}
+
+.menuItem {
+  appearance: none;
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.menuItem:hover {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.menuItem:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
+.emphasis {
+  font-weight: 800;
+}

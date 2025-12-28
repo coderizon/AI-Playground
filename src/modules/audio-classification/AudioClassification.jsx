@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
+import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
 import { useBluetooth } from '../../hooks/useBluetooth.js';
 import { useAudioTransferLearning } from '../../hooks/useAudioTransferLearning.js';
 import BluetoothModal from '../image-classification/components/BluetoothModal.jsx';
@@ -224,9 +225,7 @@ export default function AudioClassification() {
           >
             <span className={styles['ic-menu-lines']} />
           </button>
-          <div className={styles['ic-title']} aria-label="Audioerkennung">
-            Audioerkennung
-          </div>
+          <ModelSwitcher />
         </header>
 
         <nav

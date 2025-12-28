@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
+import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
 import { useBluetooth } from '../../hooks/useBluetooth.js';
 import { useMobileNet } from '../../hooks/useMobileNet.js';
 import { useTransferLearning } from '../../hooks/useTransferLearning.js';
@@ -190,9 +191,7 @@ export default function ImageClassification() {
           >
             <span className={styles['ic-menu-lines']} />
           </button>
-          <div className={styles['ic-title']} aria-label="Bildklassifikation">
-            Bildklassifikation
-          </div>
+          <ModelSwitcher />
         </header>
 
         <nav
