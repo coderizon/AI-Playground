@@ -44,7 +44,9 @@ export default function AudioClassification() {
   const [epochs, setEpochs] = useState(30);
   const [batchSize, setBatchSize] = useState(16);
   const [learningRate, setLearningRate] = useState(0.001);
+  const [activeSpectrogramClassId, setActiveSpectrogramClassId] = useState(null);
   const hasStartedListeningRef = useRef(false);
+  const hasInitializedSpectrogramRef = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const lastSentLabelRef = useRef(null);
 
@@ -99,10 +101,15 @@ export default function AudioClassification() {
   }, [activeStep, isListening, isTraining, isTrained, startListening, stopListening]);
 
   useEffect(() => {
-    if (activeStep !== 'data') {
-      stopCollecting();
-    }
-  }, [activeStep, stopCollecting]);
+    stopCollecting();
+  }, [activeStep, activeSpectrogramClassId, stopCollecting]);
+
+  useEffect(() => {
+    if (hasInitializedSpectrogramRef.current) return;
+    if (!classes.length) return;
+    setActiveSpectrogramClassId(classes[0].id);
+    hasInitializedSpectrogramRef.current = true;
+  }, [classes]);
 
   useEffect(() => {
     if (!isConnected || activeStep !== 'test' || !isTrained) {
@@ -147,15 +154,24 @@ export default function AudioClassification() {
   const activeStepIndex = Math.max(0, STEP_ORDER.indexOf(activeStep));
 
   const handleAddClass = useCallback(() => {
-    addClass();
+    const nextClass = addClass();
+    if (nextClass?.id) setActiveSpectrogramClassId(nextClass.id);
   }, [addClass]);
 
   const handleRemoveClass = useCallback(
     (classIndex, classId) => {
       if (classes.length <= 1) return;
+      const nextClasses = classes.filter((_, index) => index !== classIndex);
+
+      if (activeSpectrogramClassId === classId) {
+        const nextActive =
+          nextClasses[classIndex] ?? nextClasses[classIndex - 1] ?? nextClasses[0];
+        setActiveSpectrogramClassId(nextActive?.id ?? null);
+      }
+
       removeClass(classIndex, classId);
     },
-    [classes.length, removeClass],
+    [activeSpectrogramClassId, classes, removeClass],
   );
 
   const handleBleClick = useCallback(() => {
@@ -267,11 +283,15 @@ export default function AudioClassification() {
                   recordingSecondsLeft={recordingSecondsLeft}
                   recordingDurationSeconds={recordingDurationSeconds}
                   canCollect={canCollect}
+                  isSpectrogramEnabled={activeSpectrogramClassId === cls.id}
                   onClassNameChange={(event) => updateClassName(index, event.target.value)}
                   onClassNameFocus={() => clearDefaultClassName(index)}
                   onClassNameBlur={() => normalizeClassName(index)}
                   onCollect={() => startCollecting(cls.id)}
                   onCollectStop={stopCollecting}
+                  onToggleSpectrogram={() =>
+                    setActiveSpectrogramClassId((prev) => (prev === cls.id ? null : cls.id))
+                  }
                   onClearExamples={() => clearClassExamples(cls.id)}
                   canRemoveClass={classes.length > 1}
                   onRemoveClass={() => handleRemoveClass(index, cls.id)}

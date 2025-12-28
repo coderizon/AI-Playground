@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { Mic, MoreVertical } from 'lucide-react';
+import { AudioLines, Mic, MoreVertical, X } from 'lucide-react';
 
 import SpectrogramCanvas from './SpectrogramCanvas.jsx';
 import styles from '../../image-classification/ImageClassification.module.css';
@@ -18,11 +18,13 @@ export default function AudioClassCard({
   recordingSecondsLeft,
   recordingDurationSeconds,
   canCollect,
+  isSpectrogramEnabled,
   onClassNameChange,
   onClassNameFocus,
   onClassNameBlur,
   onCollect,
   onCollectStop,
+  onToggleSpectrogram,
   onClearExamples,
   canRemoveClass,
   onRemoveClass,
@@ -66,6 +68,16 @@ export default function AudioClassCard({
           onBlur={onClassNameBlur}
         />
         <div className={styles['class-card-actions']}>
+          <button
+            className={styles['ic-webcam-toggle']}
+            type="button"
+            aria-label={isSpectrogramEnabled ? 'Spektrogramm schließen' : 'Spektrogramm öffnen'}
+            aria-pressed={isSpectrogramEnabled}
+            onClick={onToggleSpectrogram}
+          >
+            <AudioLines className={styles['ic-webcam-icon']} aria-hidden="true" />
+            {isSpectrogramEnabled ? <X className={styles['ic-webcam-x']} aria-hidden="true" /> : null}
+          </button>
           <div className={styles['menu-wrapper']} ref={menuRef}>
             <button
               className={styles['menu-button']}
@@ -110,46 +122,52 @@ export default function AudioClassCard({
       </div>
 
       <div className={styles['audio-card-body']}>
-        <div className={styles['spectrogram-frame']}>
-          <SpectrogramCanvas spectrogramRef={spectrogramRef} isActive={isCollecting} />
-        </div>
-
-        <button
-          className={cx(styles.primary, styles.block, styles['audio-record-button'])}
-          type="button"
-          disabled={!canCollect}
-          onClick={onCollect}
-          aria-pressed={isCollecting}
-        >
-          <Mic className={styles['audio-record-icon']} aria-hidden="true" />
-          {isCollecting ? 'Aufnahme läuft…' : '10s aufnehmen'}
-        </button>
-
-        {isCollecting ? (
-          <div className={styles['recording-progress']}>
-            <div className={styles['recording-progress-meta']}>
-              <span>Aufnahme läuft…</span>
-              <span>{recordingSecondsLeft}s</span>
-            </div>
-            <div
-              className={styles['recording-progress-bar']}
-              style={{
-                '--recording-ticks': Math.max(1, recordingDurationSeconds ?? 1),
-              }}
-            >
-              <div
-                className={styles['recording-progress-fill']}
-                style={{ width: `${recordingProgress}%` }}
-              />
-            </div>
-            <button
-              className={styles['recording-stop']}
-              type="button"
-              onClick={onCollectStop}
-            >
-              Aufnahme stoppen
-            </button>
+        {isSpectrogramEnabled ? (
+          <div className={styles['spectrogram-frame']}>
+            <SpectrogramCanvas spectrogramRef={spectrogramRef} isActive={isCollecting} />
           </div>
+        ) : null}
+
+        {isSpectrogramEnabled ? (
+          <>
+            <button
+              className={cx(styles.primary, styles.block, styles['audio-record-button'])}
+              type="button"
+              disabled={!canCollect}
+              onClick={onCollect}
+              aria-pressed={isCollecting}
+            >
+              <Mic className={styles['audio-record-icon']} aria-hidden="true" />
+              {isCollecting ? 'Aufnahme läuft…' : '10s aufnehmen'}
+            </button>
+
+            {isCollecting ? (
+              <div className={styles['recording-progress']}>
+                <div className={styles['recording-progress-meta']}>
+                  <span>Aufnahme läuft…</span>
+                  <span>{recordingSecondsLeft}s</span>
+                </div>
+                <div
+                  className={styles['recording-progress-bar']}
+                  style={{
+                    '--recording-ticks': Math.max(1, recordingDurationSeconds ?? 1),
+                  }}
+                >
+                  <div
+                    className={styles['recording-progress-fill']}
+                    style={{ width: `${recordingProgress}%` }}
+                  />
+                </div>
+                <button
+                  className={styles['recording-stop']}
+                  type="button"
+                  onClick={onCollectStop}
+                >
+                  Aufnahme stoppen
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         <div className={styles['count-row']}>
