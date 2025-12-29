@@ -1,75 +1,168 @@
 import { useEffect, useRef } from 'react';
-
 import styles from '../../image-classification/ImageClassification.module.css';
 
-const MIN_DB = -100;
-const MAX_DB = -30;
+// "Teachable Machine"-aehnliche Farbpalette (dunkel -> lila -> rot -> gelb)
+const COLOR_PALETTE = {
+  0: [0, 0, 0], // Stille (schwarz)
+  10: [75, 0, 159], // Tiefes lila
+  20: [104, 0, 251], // Lila
+  30: [131, 0, 255], // Helllila
+  40: [155, 18, 157], // Magenta
+  50: [175, 37, 0], // Rot
+  60: [191, 59, 0], // Rot-orange
+  70: [206, 88, 0], // Orange
+  80: [223, 132, 0], // Hellorange
+  90: [240, 188, 0], // Gold
+  100: [255, 252, 0], // Grelles gelb
+};
 
-function normalizeDb(value) {
-  if (!Number.isFinite(value)) return 0;
-  const normalized = (value - MIN_DB) / (MAX_DB - MIN_DB);
-  return Math.min(1, Math.max(0, normalized));
+/**
+ * Berechnet die Farbe basierend auf der Lautstaerke (0-255).
+ * Nutzt lineare Interpolation fuer weiche Uebergaenge.
+ */
+function getHeatmapColor(value) {
+  const percent = (value / 255) * 100;
+  const floored = 10 * Math.floor(percent / 10);
+
+  if (floored >= 100) {
+    const [r, g, b] = COLOR_PALETTE[100];
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  const distFromFloor = percent - floored;
+  const factor = distFromFloor / 10;
+
+  const startColor = COLOR_PALETTE[floored] || [0, 0, 0];
+  const endColor = COLOR_PALETTE[floored + 10] || COLOR_PALETTE[100];
+
+  const r = Math.round(startColor[0] + factor * (endColor[0] - startColor[0]));
+  const g = Math.round(startColor[1] + factor * (endColor[1] - startColor[1]));
+  const b = Math.round(startColor[2] + factor * (endColor[2] - startColor[2]));
+
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
-export default function SpectrogramCanvas({ spectrogramRef, isActive }) {
+export default function SpectrogramCanvas({ isActive }) {
   const canvasRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const streamRef = useRef(null);
   const rafRef = useRef(null);
 
+  // Audio-Initialisierung: unabhaengig von der KI.
+  useEffect(() => {
+    if (!isActive) return undefined;
+
+    const initAudio = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          },
+        });
+
+        streamRef.current = stream;
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        audioContextRef.current = ctx;
+
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.0;
+        analyserRef.current = analyser;
+
+        const source = ctx.createMediaStreamSource(stream);
+        source.connect(analyser);
+      } catch (err) {
+        console.error('Visualisierungs-Fehler:', err);
+      }
+    };
+
+    initAudio();
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [isActive]);
+
+  // Zeichen-Loop (60 FPS)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return undefined;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      ctx.fillStyle = 'rgb(0, 0, 0)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     };
 
     resize();
-    ctx.fillStyle = '#0f1115';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
 
-    if (isActive) {
-      const draw = () => {
-        const width = canvas.width;
-        const height = canvas.height;
+    const draw = () => {
+      if (!isActive || !analyserRef.current) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
 
-        ctx.fillStyle = '#0f1115';
-        ctx.drawImage(canvas, -1, 0);
-        ctx.fillRect(width - 1, 0, 1, height);
+      const width = canvas.width;
+      const height = canvas.height;
+      const analyser = analyserRef.current;
 
-        const spectrogram = spectrogramRef?.current;
-        if (spectrogram?.data && spectrogram?.frameSize) {
-          const { data, frameSize } = spectrogram;
-          const frameOffset = Math.max(0, data.length - frameSize);
-          const binHeight = height / frameSize;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
 
-          for (let i = 0; i < frameSize; i += 1) {
-            const intensity = normalizeDb(data[frameOffset + i]);
-            const hue = 220 - intensity * 160;
-            const light = 18 + intensity * 55;
-            ctx.fillStyle = `hsl(${hue} 90% ${light}%)`;
-            const y = height - (i + 1) * binHeight;
-            ctx.fillRect(width - 1, y, 1, binHeight + 0.6);
-          }
+      const scrollSpeed = 2;
+      ctx.drawImage(canvas, -scrollSpeed, 0);
+
+      const relevantFrequencies = Math.floor(bufferLength * 0.7);
+
+      for (let i = 0; i < relevantFrequencies; i += 1) {
+        const value = dataArray[i];
+
+        if (value > 5) {
+          const color = getHeatmapColor(value);
+          ctx.fillStyle = color;
+
+          const y = height - Math.round((i / relevantFrequencies) * height);
+          const pointHeight = Math.ceil(height / relevantFrequencies) || 1;
+
+          ctx.fillRect(
+            width - scrollSpeed,
+            y - pointHeight,
+            scrollSpeed,
+            pointHeight,
+          );
         }
+      }
 
-        rafRef.current = window.requestAnimationFrame(draw);
-      };
+      rafRef.current = requestAnimationFrame(draw);
+    };
 
-      rafRef.current = window.requestAnimationFrame(draw);
-    }
+    rafRef.current = requestAnimationFrame(draw);
 
     return () => {
-      if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(rafRef.current);
       observer.disconnect();
     };
-  }, [isActive, spectrogramRef]);
+  }, [isActive]);
 
   return <canvas ref={canvasRef} className={styles['spectrogram-canvas']} />;
 }
