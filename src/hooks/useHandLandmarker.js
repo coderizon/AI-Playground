@@ -114,13 +114,15 @@ async function loadHandLandmarkerOnce() {
 
   landmarkerPromise = (async () => {
     const vision = await FilesetResolver.forVisionTasks(HAND_LANDMARKER_WASM_URL);
-    return HandLandmarker.createFromOptions(vision, {
+    const landmarker = await HandLandmarker.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath: HAND_LANDMARKER_MODEL_URL,
       },
       runningMode: 'VIDEO',
       numHands: 2,
     });
+    console.info('[HandLandmarker] Loaded model:', HAND_LANDMARKER_MODEL_URL);
+    return landmarker;
   })();
 
   return landmarkerPromise;
