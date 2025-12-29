@@ -1,23 +1,83 @@
+import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import ImageClassification from './modules/image-classification/ImageClassification.jsx';
-import FaceLandmarks from './modules/face-landmarks/FaceLandmarks.jsx';
 import LandingPage from './modules/landing/LandingPage.jsx';
-import PoseEstimation from './modules/pose-estimation/PoseEstimation.jsx';
-import AudioClassification from './modules/audio-classification/AudioClassification.jsx';
-import ObjectDetection from './modules/object-detection/ObjectDetection.jsx';
-import HandGestures from './modules/hand-gestures/HandGestures.jsx';
+
+const ImageClassification = lazy(() =>
+  import('./modules/image-classification/ImageClassification.jsx'),
+);
+const FaceLandmarks = lazy(() =>
+  import('./modules/face-landmarks/FaceLandmarks.jsx'),
+);
+const PoseEstimation = lazy(() =>
+  import('./modules/pose-estimation/PoseEstimation.jsx'),
+);
+const AudioClassification = lazy(() =>
+  import('./modules/audio-classification/AudioClassification.jsx'),
+);
+const ObjectDetection = lazy(() =>
+  import('./modules/object-detection/ObjectDetection.jsx'),
+);
+const HandGestures = lazy(() =>
+  import('./modules/hand-gestures/HandGestures.jsx'),
+);
+
+function LazyRoute({ children }) {
+  return <Suspense fallback={<div>Lade Modul...</div>}>{children}</Suspense>;
+}
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/image-classification" element={<ImageClassification />} />
-      <Route path="/object-detection" element={<ObjectDetection />} />
-      <Route path="/audio-classification" element={<AudioClassification />} />
-      <Route path="/pose-estimation" element={<PoseEstimation />} />
-      <Route path="/face-landmarks" element={<FaceLandmarks />} />
-      <Route path="/gestenerkennung" element={<HandGestures />} />
+      <Route
+        path="/image-classification"
+        element={
+          <LazyRoute>
+            <ImageClassification />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/object-detection"
+        element={
+          <LazyRoute>
+            <ObjectDetection />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/audio-classification"
+        element={
+          <LazyRoute>
+            <AudioClassification />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/pose-estimation"
+        element={
+          <LazyRoute>
+            <PoseEstimation />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/face-landmarks"
+        element={
+          <LazyRoute>
+            <FaceLandmarks />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/gestenerkennung"
+        element={
+          <LazyRoute>
+            <HandGestures />
+          </LazyRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
