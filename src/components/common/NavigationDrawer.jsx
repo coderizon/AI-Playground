@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { Home, X } from 'lucide-react';
+import { CircleHelp, Home, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import './NavigationDrawer.css';
@@ -32,6 +32,11 @@ export default function NavigationDrawer({ open, onClose, drawerId = 'navigation
 
   const handleHome = useCallback(() => {
     navigate('/');
+    closeDrawer();
+  }, [closeDrawer, navigate]);
+
+  const handleFaq = useCallback(() => {
+    navigate('/faq');
     closeDrawer();
   }, [closeDrawer, navigate]);
 
@@ -124,9 +129,12 @@ export default function NavigationDrawer({ open, onClose, drawerId = 'navigation
             <Home className="nav-drawer-item-icon" aria-hidden="true" />
             <span>Home</span>
           </button>
+          <button className="nav-drawer-item" type="button" onClick={handleFaq}>
+            <CircleHelp className="nav-drawer-item-icon" aria-hidden="true" />
+            <span>FAQs</span>
+          </button>
         </nav>
       </aside>
     </div>
   );
 }
-

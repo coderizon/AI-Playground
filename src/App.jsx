@@ -24,6 +24,7 @@ const HandGestures = lazy(() =>
 const VisualQA = lazy(() =>
   import('./modules/visual-qa/VisualQA.jsx'),
 );
+const FaqPage = lazy(() => import('./modules/faq/FaqPage.jsx'));
 
 function LazyRoute({ children }) {
   return <Suspense fallback={<div>Lade Modul...</div>}>{children}</Suspense>;
@@ -86,6 +87,14 @@ export default function App() {
         element={
           <LazyRoute>
             <HandGestures />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/faq"
+        element={
+          <LazyRoute>
+            <FaqPage />
           </LazyRoute>
         }
       />
