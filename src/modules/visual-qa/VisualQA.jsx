@@ -237,13 +237,16 @@ export default function VisualQA() {
                   {!isReview ? (
                     <div className={qaStyles['capture-actions']}>
                       <button
-                        className={qaStyles['shutter-button']}
+                        className={cx(
+                          styles.dataCollector,
+                          styles.primary,
+                          qaStyles['capture-button'],
+                        )}
                         type="button"
                         onClick={capture}
                         disabled={webcamStatus !== 'ready'}
                       >
-                        <span className={qaStyles['shutter-ring']} aria-hidden="true" />
-                        <span className={qaStyles['shutter-label']}>Foto aufnehmen</span>
+                        Foto aufnehmen
                       </button>
                     </div>
                   ) : null}

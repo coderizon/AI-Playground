@@ -22,6 +22,12 @@
   justify-content: center;
 }
 
+.capture-button {
+  width: var(--webcam-frame-size);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .shutter-button {
   appearance: none;
   border: none;

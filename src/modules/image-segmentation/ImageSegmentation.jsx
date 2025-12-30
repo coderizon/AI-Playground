@@ -451,13 +451,16 @@ export default function ImageSegmentation() {
                   {!isReview ? (
                     <div className={segStyles['capture-actions']}>
                       <button
-                        className={segStyles['shutter-button']}
+                        className={cx(
+                          styles.dataCollector,
+                          styles.primary,
+                          segStyles['capture-button'],
+                        )}
                         type="button"
                         onClick={capture}
                         disabled={webcamStatus !== 'ready'}
                       >
-                        <span className={segStyles['shutter-ring']} aria-hidden="true" />
-                        <span className={segStyles['shutter-label']}>Foto aufnehmen</span>
+                        Foto aufnehmen
                       </button>
                     </div>
                   ) : null}

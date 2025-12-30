@@ -16,6 +16,11 @@ const MODELS = [
     path: '/visual-qa',
   },
   {
+    id: 'image-segmentation',
+    label: 'Bildsegmentierung',
+    path: '/image-segmentation',
+  },
+  {
     id: 'object-detection',
     label: 'Objektdetektion',
     path: '/object-detection',
