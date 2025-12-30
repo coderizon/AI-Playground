@@ -11,6 +11,11 @@ const MODELS = [
     path: '/image-classification',
   },
   {
+    id: 'visual-qa',
+    label: 'Bildbeschreibung',
+    path: '/visual-qa',
+  },
+  {
     id: 'object-detection',
     label: 'Objektdetektion',
     path: '/object-detection',

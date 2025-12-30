@@ -17,6 +17,16 @@ const MODELS = [
     hasHero: true,
   },
   {
+    id: 'visual-qa',
+    mode: 'image',
+    title: 'Bildbeschreibung',
+    description: 'Bilder automatisch beschreiben.',
+    imageSrc: '/assets/images/Bildklassifikation.png',
+    imageAlt: 'Bildbeschreibung Vorschau',
+    tags: [{ label: 'Nur Ausführbar', variant: 'warning' }],
+    hasHero: true,
+  },
+  {
     id: 'objektdetektion',
     mode: 'image',
     title: 'Objektdetektion',
@@ -89,6 +99,10 @@ export default function LandingPage() {
     (model) => {
       if (model?.id === 'bildklassifikation') {
         navigate('/image-classification');
+        return;
+      }
+      if (model?.id === 'visual-qa') {
+        navigate('/visual-qa');
         return;
       }
       if (model?.id === 'objektdetektion') {

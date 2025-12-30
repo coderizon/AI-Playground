@@ -21,6 +21,9 @@ const ObjectDetection = lazy(() =>
 const HandGestures = lazy(() =>
   import('./modules/hand-gestures/HandGestures.jsx'),
 );
+const VisualQA = lazy(() =>
+  import('./modules/visual-qa/VisualQA.jsx'),
+);
 
 function LazyRoute({ children }) {
   return <Suspense fallback={<div>Lade Modul...</div>}>{children}</Suspense>;
@@ -43,6 +46,14 @@ export default function App() {
         element={
           <LazyRoute>
             <ObjectDetection />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/visual-qa"
+        element={
+          <LazyRoute>
+            <VisualQA />
           </LazyRoute>
         }
       />
