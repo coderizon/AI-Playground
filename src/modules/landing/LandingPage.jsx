@@ -27,6 +27,16 @@ const MODELS = [
     hasHero: true,
   },
   {
+    id: 'bildsegmentierung',
+    mode: 'image',
+    title: 'Bildsegmentierung',
+    description: 'Bildbereiche pixelgenau erkennen.',
+    imageSrc: '/assets/images/segmentation.png',
+    imageAlt: 'Bildsegmentierung Vorschau',
+    tags: [{ label: 'Nur Ausführbar', variant: 'warning' }],
+    hasHero: true,
+  },
+  {
     id: 'objektdetektion',
     mode: 'image',
     title: 'Objektdetektion',
@@ -103,6 +113,10 @@ export default function LandingPage() {
       }
       if (model?.id === 'visual-qa') {
         navigate('/visual-qa');
+        return;
+      }
+      if (model?.id === 'bildsegmentierung') {
+        navigate('/image-segmentation');
         return;
       }
       if (model?.id === 'objektdetektion') {

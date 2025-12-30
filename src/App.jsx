@@ -24,6 +24,9 @@ const HandGestures = lazy(() =>
 const VisualQA = lazy(() =>
   import('./modules/visual-qa/VisualQA.jsx'),
 );
+const ImageSegmentation = lazy(() =>
+  import('./modules/image-segmentation/ImageSegmentation.jsx'),
+);
 const FaqPage = lazy(() => import('./modules/faq/FaqPage.jsx'));
 
 function LazyRoute({ children }) {
@@ -55,6 +58,14 @@ export default function App() {
         element={
           <LazyRoute>
             <VisualQA />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/image-segmentation"
+        element={
+          <LazyRoute>
+            <ImageSegmentation />
           </LazyRoute>
         }
       />
