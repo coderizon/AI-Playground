@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SendHorizontal } from 'lucide-react';
+import { MessageCirclePlus, SendHorizontal, SlidersHorizontal } from 'lucide-react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
@@ -22,6 +22,7 @@ export default function LLMChat() {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState([]);
   const chatLogRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
   const lastHapticRef = useRef(0);
 
   const { status, progress, error, generateResponse, modelId } = useLLM();
@@ -50,7 +51,30 @@ export default function LLMChat() {
   useEffect(() => {
     const container = chatLogRef.current;
     if (!container) return;
-    container.scrollTop = container.scrollHeight;
+
+    const updateAutoScroll = () => {
+      const threshold = 24;
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      shouldAutoScrollRef.current = distanceFromBottom <= threshold;
+    };
+
+    updateAutoScroll();
+    container.addEventListener('scroll', updateAutoScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', updateAutoScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoScrollRef.current) return;
+    const container = chatLogRef.current;
+    if (!container) return;
+    const raf = requestAnimationFrame(() => {
+      container.scrollTop = container.scrollHeight;
+    });
+    return () => cancelAnimationFrame(raf);
   }, [messages, isGenerating]);
 
   const triggerHaptic = useCallback(() => {
@@ -185,6 +209,22 @@ export default function LLMChat() {
               <span className={styles['model-chip']} title={modelId || ''}>
                 {modelLabel}
               </span>
+              <div className={styles['chat-toolbar-actions']}>
+                <button
+                  className={styles['chat-toolbar-action']}
+                  type="button"
+                  aria-label="Einstellungen"
+                >
+                  <SlidersHorizontal size={18} strokeWidth={2} />
+                </button>
+                <button
+                  className={styles['chat-toolbar-action']}
+                  type="button"
+                  aria-label="Neue Unterhaltung"
+                >
+                  <MessageCirclePlus size={18} strokeWidth={2} />
+                </button>
+              </div>
             </div>
 
             <div
@@ -194,35 +234,31 @@ export default function LLMChat() {
               aria-live="polite"
               aria-busy={isGenerating}
             >
-              {messages.length ? (
-                messages.map((message, index) => {
-                  const isPendingMessage =
-                    isGenerating &&
-                    message.role === 'assistant' &&
-                    index === messages.length - 1;
-                  const content =
-                    message.content || (isPendingMessage ? 'Denke...' : '');
-                  return (
-                    <div
-                      key={`${message.role}-${index}`}
-                      className={cx(
-                        styles['chat-message'],
-                        message.role === 'user' && styles.user,
-                        isPendingMessage && styles.pending,
-                      )}
-                    >
-                      <div className={styles['chat-role']}>
-                        {ROLE_LABELS[message.role] ?? message.role}
+              {messages.length
+                ? messages.map((message, index) => {
+                    const isPendingMessage =
+                      isGenerating &&
+                      message.role === 'assistant' &&
+                      index === messages.length - 1;
+                    const content =
+                      message.content || (isPendingMessage ? 'Denke...' : '');
+                    return (
+                      <div
+                        key={`${message.role}-${index}`}
+                        className={cx(
+                          styles['chat-message'],
+                          message.role === 'user' && styles.user,
+                          isPendingMessage && styles.pending,
+                        )}
+                      >
+                        <div className={styles['chat-role']}>
+                          {ROLE_LABELS[message.role] ?? message.role}
+                        </div>
+                        <p className={styles['chat-text']}>{content}</p>
                       </div>
-                      <p className={styles['chat-text']}>{content}</p>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className={styles.placeholder}>
-                  Stelle eine Frage, um zu starten.
-                </p>
-              )}
+                    );
+                  })
+                : null}
             </div>
 
             <form className={styles['chat-form']} onSubmit={handleSubmit}>
@@ -247,9 +283,6 @@ export default function LLMChat() {
                 </button>
               </div>
             </form>
-            <div className={styles['chat-hint']}>
-              Shift + Enter für Zeilenumbruch
-            </div>
           </section>
         </main>
       </div>
