@@ -21,6 +21,7 @@ export default function LLMChat() {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState([]);
   const chatLogRef = useRef(null);
+  const lastHapticRef = useRef(0);
 
   const { status, progress, error, generateResponse, modelId } = useLLM();
 
@@ -51,6 +52,16 @@ export default function LLMChat() {
     container.scrollTop = container.scrollHeight;
   }, [messages, isGenerating]);
 
+  const triggerHaptic = useCallback(() => {
+    if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastHapticRef.current < 50) return;
+    lastHapticRef.current = now;
+    navigator.vibrate(8);
+  }, []);
+
   const handleSend = useCallback(async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
@@ -64,6 +75,7 @@ export default function LLMChat() {
     try {
       const responseText = await generateResponse(nextMessages, {
         onDelta: (_, fullText) => {
+          triggerHaptic();
           setMessages((prev) => {
             if (!prev[assistantIndex]) return prev;
             const updated = [...prev];
@@ -93,7 +105,7 @@ export default function LLMChat() {
         return updated;
       });
     }
-  }, [generateResponse, inputValue, isReady, messages]);
+  }, [generateResponse, inputValue, isReady, messages, triggerHaptic]);
 
   const handleSubmit = useCallback(
     (event) => {
