@@ -159,7 +159,7 @@ export function useLLM({ enabled = true, modelId } = {}) {
   }, []);
 
   const generateResponse = useCallback(
-    async (messages) => {
+    async (messages, { onDelta } = {}) => {
       if (!isWebGPUSupported()) {
         const gpuError = new Error(
           'WebGPU ist auf diesem Gerät nicht verfügbar. Bitte nutze einen aktuellen Desktop-Browser.',
@@ -190,8 +190,36 @@ export function useLLM({ enabled = true, modelId } = {}) {
           throw apiError;
         }
 
-        const response = await engine.chat.completions.create({ messages });
-        const content = response?.choices?.[0]?.message?.content ?? '';
+        const useStream = typeof onDelta === 'function';
+        let response = null;
+
+        try {
+          response = await engine.chat.completions.create({
+            messages,
+            ...(useStream ? { stream: true } : {}),
+          });
+        } catch (createError) {
+          if (!useStream) throw createError;
+          response = await engine.chat.completions.create({ messages });
+        }
+
+        let content = '';
+        const isAsyncIterable =
+          response && typeof response[Symbol.asyncIterator] === 'function';
+
+        if (useStream && isAsyncIterable) {
+          for await (const chunk of response) {
+            const delta = chunk?.choices?.[0]?.delta?.content ?? '';
+            if (!delta) continue;
+            content += delta;
+            onDelta?.(delta, content);
+          }
+        } else {
+          content = response?.choices?.[0]?.message?.content ?? '';
+          if (useStream && content) {
+            onDelta?.(content, content);
+          }
+        }
         if (mountedRef.current) {
           setStatus('ready');
         }

@@ -57,19 +57,41 @@ export default function LLMChat() {
     if (!isReady) return;
 
     const nextMessages = [...messages, { role: 'user', content: trimmed }];
-    setMessages(nextMessages);
+    const assistantIndex = nextMessages.length;
+    setMessages([...nextMessages, { role: 'assistant', content: '' }]);
     setInputValue('');
 
     try {
-      const responseText = await generateResponse(nextMessages);
+      const responseText = await generateResponse(nextMessages, {
+        onDelta: (_, fullText) => {
+          setMessages((prev) => {
+            if (!prev[assistantIndex]) return prev;
+            const updated = [...prev];
+            const current = updated[assistantIndex];
+            if (!current || current.role !== 'assistant') return prev;
+            updated[assistantIndex] = { ...current, content: fullText };
+            return updated;
+          });
+        },
+      });
       const reply = responseText?.trim() ? responseText.trim() : 'Keine Antwort erhalten.';
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+      setMessages((prev) => {
+        if (!prev[assistantIndex]) return prev;
+        const updated = [...prev];
+        updated[assistantIndex] = { ...updated[assistantIndex], content: reply };
+        return updated;
+      });
     } catch (generateError) {
       console.error(generateError);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Antwort konnte nicht erstellt werden.' },
-      ]);
+      setMessages((prev) => {
+        if (!prev[assistantIndex]) return prev;
+        const updated = [...prev];
+        updated[assistantIndex] = {
+          role: 'assistant',
+          content: 'Antwort konnte nicht erstellt werden.',
+        };
+        return updated;
+      });
     }
   }, [generateResponse, inputValue, isReady, messages]);
 
@@ -166,32 +188,34 @@ export default function LLMChat() {
               aria-busy={isGenerating}
             >
               {messages.length ? (
-                messages.map((message, index) => (
-                  <div
-                    key={`${message.role}-${index}`}
-                    className={cx(
-                      styles['chat-message'],
-                      message.role === 'user' && styles.user,
-                    )}
-                  >
-                    <div className={styles['chat-role']}>
-                      {ROLE_LABELS[message.role] ?? message.role}
+                messages.map((message, index) => {
+                  const isPendingMessage =
+                    isGenerating &&
+                    message.role === 'assistant' &&
+                    index === messages.length - 1;
+                  const content =
+                    message.content || (isPendingMessage ? 'Denke...' : '');
+                  return (
+                    <div
+                      key={`${message.role}-${index}`}
+                      className={cx(
+                        styles['chat-message'],
+                        message.role === 'user' && styles.user,
+                        isPendingMessage && styles.pending,
+                      )}
+                    >
+                      <div className={styles['chat-role']}>
+                        {ROLE_LABELS[message.role] ?? message.role}
+                      </div>
+                      <p className={styles['chat-text']}>{content}</p>
                     </div>
-                    <p className={styles['chat-text']}>{message.content}</p>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className={styles.placeholder}>
                   Stelle eine Frage, um zu starten.
                 </p>
               )}
-
-              {isGenerating ? (
-                <div className={cx(styles['chat-message'], styles.pending)}>
-                  <div className={styles['chat-role']}>Modell</div>
-                  <p className={styles['chat-text']}>Denke...</p>
-                </div>
-              ) : null}
             </div>
 
             <form className={styles['chat-form']} onSubmit={handleSubmit}>
