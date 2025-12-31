@@ -100,10 +100,13 @@ const MODELS = [
     mode: 'text',
     title: 'LLM Chatbot',
     description: 'Chatte lokal mit einem LLM (Gemma/Llama).',
+    imageSrc: '/assets/images/llm-chatbot.png',
+    imageAlt: 'LLM Chatbot Vorschau',
     tags: [
       { label: 'Experimentell', variant: 'warning' },
       { label: 'WebGPU', variant: 'primary' },
     ],
+    hasHero: true,
   },
 ];
 
