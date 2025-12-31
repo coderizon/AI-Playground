@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SendHorizontal } from 'lucide-react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
@@ -159,7 +160,7 @@ export default function LLMChat() {
           ) : null}
 
           {isLoading ? (
-            <section className={styles.card} aria-live="polite">
+            <section className={cx(styles.card, styles['progress-card'])} aria-live="polite">
               <div className={styles['progress-meta']}>
                 <span>Modell wird geladen</span>
                 <span>{progressValue}%</span>
@@ -179,15 +180,9 @@ export default function LLMChat() {
             </section>
           ) : null}
 
-          <section className={styles.card}>
-            <div className={styles['card-header']}>
-              <div>
-                <h2 className={styles['card-title']}>LLM Chatbot</h2>
-                <p className={styles['card-subtitle']}>
-                  Lokal im Browser · WebGPU
-                </p>
-              </div>
-              <span className={styles['model-pill']} title={modelId || ''}>
+          <section className={cx(styles.card, styles['chat-card'])}>
+            <div className={styles['chat-toolbar']}>
+              <span className={styles['model-chip']} title={modelId || ''}>
                 {modelLabel}
               </span>
             </div>
@@ -231,23 +226,26 @@ export default function LLMChat() {
             </div>
 
             <form className={styles['chat-form']} onSubmit={handleSubmit}>
-              <textarea
-                className={styles['chat-input']}
-                name="prompt"
-                placeholder="Schreibe eine Nachricht…"
-                rows={2}
-                value={inputValue}
-                onChange={(event) => setInputValue(event.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={inputDisabled}
-              />
-              <button
-                className={styles['send-button']}
-                type="submit"
-                disabled={!canSend}
-              >
-                Senden
-              </button>
+              <div className={styles['chat-input-shell']}>
+                <textarea
+                  className={styles['chat-input']}
+                  name="prompt"
+                  placeholder="Schreibe eine Nachricht…"
+                  rows={1}
+                  value={inputValue}
+                  onChange={(event) => setInputValue(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={inputDisabled}
+                />
+                <button
+                  className={styles['send-icon-button']}
+                  type="submit"
+                  aria-label="Senden"
+                  disabled={!canSend}
+                >
+                  <SendHorizontal size={18} strokeWidth={2.2} />
+                </button>
+              </div>
             </form>
             <div className={styles['chat-hint']}>
               Shift + Enter für Zeilenumbruch
