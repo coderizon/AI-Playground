@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as webllm from '@mlc-ai/web-llm';
 
-const FALLBACK_MODEL_ID = 'Llama-3.2-1B-Instruct-q4f32_1-MLC';
+const PREFERRED_MODEL_ID = 'Llama-3.2-1B-Instruct-q4f16_1-MLC';
+const FALLBACK_MODEL_ID = PREFERRED_MODEL_ID;
 const SMALL_MODEL_MATCHERS = [
   /[^0-9]1b[^0-9]/i,
   /[^0-9]2b[^0-9]/i,
@@ -23,6 +24,14 @@ function resolveModelId(preferredModelId) {
   }
 
   if (modelList.length) {
+    if (!preferredModelId) {
+      const preferred = modelList.find((model) => {
+        const id = model?.model_id ?? model?.model ?? '';
+        return id === PREFERRED_MODEL_ID;
+      });
+      if (preferred) return preferred.model_id ?? preferred.model ?? PREFERRED_MODEL_ID;
+    }
+
     const candidate = modelList.find((model) => {
       const id = String(model?.model_id ?? model?.model ?? '');
       if (!id) return false;

@@ -16,6 +16,11 @@ const MODELS = [
     path: '/visual-qa',
   },
   {
+    id: 'llm-chat',
+    label: 'LLM Chatbot',
+    path: '/llm-chat',
+  },
+  {
     id: 'image-segmentation',
     label: 'Bildsegmentierung',
     path: '/image-segmentation',

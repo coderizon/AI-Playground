@@ -98,7 +98,7 @@ const MODELS = [
   {
     id: 'llm-chat',
     mode: 'text',
-    title: 'KI Chatbot',
+    title: 'LLM Chatbot',
     description: 'Chatte lokal mit einem LLM (Gemma/Llama).',
     tags: [
       { label: 'Experimentell', variant: 'warning' },

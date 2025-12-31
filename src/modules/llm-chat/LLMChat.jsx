@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
+import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
 import { useLLM } from '../../hooks/useLLM.js';
 
 import styles from './LLMChat.module.css';
@@ -109,7 +110,7 @@ export default function LLMChat() {
           >
             <span className={styles['llm-menu-lines']} />
           </button>
-          <div className={styles['llm-title']}>LLM Chat</div>
+          <ModelSwitcher />
         </header>
 
         <main className={styles['llm-stage']}>
@@ -147,7 +148,7 @@ export default function LLMChat() {
           <section className={styles.card}>
             <div className={styles['card-header']}>
               <div>
-                <h2 className={styles['card-title']}>Chat</h2>
+                <h2 className={styles['card-title']}>LLM Chatbot</h2>
                 <p className={styles['card-subtitle']}>
                   Lokal im Browser · WebGPU
                 </p>
