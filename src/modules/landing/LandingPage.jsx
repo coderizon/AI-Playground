@@ -95,6 +95,16 @@ const MODELS = [
     tags: [{ label: 'Trainierbar', variant: 'primary' }],
     hasHero: true,
   },
+  {
+    id: 'llm-chat',
+    mode: 'text',
+    title: 'KI Chatbot',
+    description: 'Chatte lokal mit einem LLM (Gemma/Llama).',
+    tags: [
+      { label: 'Experimentell', variant: 'warning' },
+      { label: 'WebGPU', variant: 'primary' },
+    ],
+  },
 ];
 
 export default function LandingPage() {
@@ -137,6 +147,10 @@ export default function LandingPage() {
       }
       if (model?.id === 'audioerkennung') {
         navigate('/audio-classification');
+        return;
+      }
+      if (model?.id === 'llm-chat') {
+        navigate('/llm-chat');
         return;
       }
 

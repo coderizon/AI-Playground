@@ -24,6 +24,9 @@ const HandGestures = lazy(() =>
 const VisualQA = lazy(() =>
   import('./modules/visual-qa/VisualQA.jsx'),
 );
+const LLMChat = lazy(() =>
+  import('./modules/llm-chat/LLMChat.jsx'),
+);
 const ImageSegmentation = lazy(() =>
   import('./modules/image-segmentation/ImageSegmentation.jsx'),
 );
@@ -66,6 +69,14 @@ export default function App() {
         element={
           <LazyRoute>
             <ImageSegmentation />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/llm-chat"
+        element={
+          <LazyRoute>
+            <LLMChat />
           </LazyRoute>
         }
       />
