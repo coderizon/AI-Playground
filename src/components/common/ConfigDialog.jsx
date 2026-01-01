@@ -345,7 +345,7 @@ export default function ConfigDialog({ isOpen, config, onApply, onClose }) {
       data-state={dialogState}
       role="dialog"
       aria-modal="true"
-      aria-label="Model configs"
+      aria-label="Modelleinstellungen"
       onClick={() => onClose?.()}
     >
       <div
@@ -355,7 +355,7 @@ export default function ConfigDialog({ isOpen, config, onApply, onClose }) {
         onClick={(event) => event.stopPropagation()}
       >
         <header className={styles.header}>
-          <h2 className={styles.title}>Model configs</h2>
+          <h2 className={styles.title}>Modelleinstellungen</h2>
         </header>
 
         <div className={styles.body}>
