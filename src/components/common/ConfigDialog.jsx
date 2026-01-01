@@ -3,13 +3,26 @@ import { useEffect, useState } from 'react';
 import styles from './ConfigDialog.module.css';
 
 const DEFAULT_CONFIG = {
+  maxTokens: 2048,
   temperature: 0.8,
   topP: 1,
   topK: 40,
   accelerator: 'GPU',
 };
 
+const MAX_TOKENS_RANGE = {
+  min: 32,
+  max: 2048,
+  step: 32,
+};
+
 const SLIDER_CONFIGS = [
+  {
+    key: 'maxTokens',
+    label: 'Max tokens',
+    ...MAX_TOKENS_RANGE,
+    integer: true,
+  },
   {
     key: 'topK',
     label: 'TopK',
@@ -51,6 +64,11 @@ function readNumber(value, fallback) {
 
 function normalizeConfig(config) {
   const safeConfig = config ?? DEFAULT_CONFIG;
+  const maxTokens = clampNumber(
+    readNumber(safeConfig.maxTokens, DEFAULT_CONFIG.maxTokens),
+    MAX_TOKENS_RANGE.min,
+    MAX_TOKENS_RANGE.max,
+  );
   const temperature = clampNumber(
     readNumber(safeConfig.temperature, DEFAULT_CONFIG.temperature),
     0,
@@ -60,6 +78,7 @@ function normalizeConfig(config) {
   const topK = clampNumber(readNumber(safeConfig.topK, DEFAULT_CONFIG.topK), 1, 100);
 
   return {
+    maxTokens: Math.round(maxTokens),
     temperature,
     topP,
     topK: Math.round(topK),
@@ -73,9 +92,18 @@ function getDecimals(step) {
   return parts.length > 1 ? parts[1].length : 0;
 }
 
+function getPercent(value, min, max) {
+  if (!Number.isFinite(value)) return 0;
+  if (max <= min) return 0;
+  const raw = ((value - min) / (max - min)) * 100;
+  return clampNumber(raw, 0, 100);
+}
+
 function SliderRow({ label, value, min, max, step, onChange }) {
   const decimals = getDecimals(step);
   const displayValue = Number.isFinite(value) ? value.toFixed(decimals) : '';
+  const safeValue = Number.isFinite(value) ? value : min;
+  const percent = getPercent(safeValue, min, max);
   const handleChange = (event) => {
     const nextValue = Number(event.target.value);
     if (!Number.isFinite(nextValue)) return;
@@ -95,6 +123,9 @@ function SliderRow({ label, value, min, max, step, onChange }) {
           value={Number.isFinite(value) ? value : min}
           onChange={handleChange}
           aria-label={`${label} slider`}
+          style={{
+            background: `linear-gradient(to right, var(--slider-accent) 0%, var(--slider-accent) ${percent}%, #e7e0ec ${percent}%, #e7e0ec 100%)`,
+          }}
         />
         <input
           className={styles.numberInput}
@@ -189,10 +220,6 @@ export default function ConfigDialog({ isOpen, config, onApply, onClose }) {
         </header>
 
         <div className={styles.body}>
-          <div className={styles.row}>
-            <span className={styles.label}>Max tokens</span>
-            <span className={styles.readonlyValue}>2048</span>
-          </div>
           {SLIDER_CONFIGS.map((slider) => (
             <SliderRow
               key={slider.key}

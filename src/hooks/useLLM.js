@@ -91,11 +91,13 @@ function clampValue(value, min, max) {
 
 function buildGenerationConfig(config) {
   if (!config) return {};
+  const maxTokens = clampValue(Number(config.maxTokens ?? config.max_tokens), 1, 2048);
   const temperature = clampValue(Number(config.temperature), 0, 2);
   const topP = clampValue(Number(config.topP), 0, 1);
   const topK = clampValue(Number(config.topK), 1, 100);
 
   const payload = {};
+  if (maxTokens !== null) payload.max_tokens = Math.round(maxTokens);
   if (temperature !== null) payload.temperature = temperature;
   if (topP !== null) payload.top_p = topP;
   if (topK !== null) payload.top_k = Math.round(topK);
