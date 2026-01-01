@@ -21,6 +21,7 @@ export default function LLMChat() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState([]);
+  const [expandedStats, setExpandedStats] = useState({});
   const chatLogRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
   const lastHapticRef = useRef(0);
@@ -87,18 +88,41 @@ export default function LLMChat() {
     navigator.vibrate(8);
   }, []);
 
+  const formatSeconds = useCallback((value) => {
+    if (!Number.isFinite(value)) return '--';
+    return (value / 1000).toFixed(2);
+  }, []);
+
+  const formatTps = useCallback((value) => {
+    if (!Number.isFinite(value)) return '--';
+    return value.toFixed(1);
+  }, []);
+
+  const toggleStats = useCallback((index) => {
+    setExpandedStats((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  }, []);
+
   const handleSend = useCallback(async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
     if (!isReady) return;
 
-    const nextMessages = [...messages, { role: 'user', content: trimmed }];
+    const nextMessages = [
+      ...messages,
+      { role: 'user', content: trimmed, meta: { stats: null, device: null } },
+    ];
     const assistantIndex = nextMessages.length;
-    setMessages([...nextMessages, { role: 'assistant', content: '' }]);
+    setMessages([
+      ...nextMessages,
+      { role: 'assistant', content: '', meta: { stats: null, device: 'gpu' } },
+    ]);
     setInputValue('');
 
     try {
-      const responseText = await generateResponse(nextMessages, {
+      const responsePayload = await generateResponse(nextMessages, {
         onDelta: (_, fullText) => {
           triggerHaptic();
           setMessages((prev) => {
@@ -111,11 +135,24 @@ export default function LLMChat() {
           });
         },
       });
+      const responseText =
+        typeof responsePayload === 'string' ? responsePayload : responsePayload?.text;
+      const responseStats =
+        typeof responsePayload === 'string' ? null : responsePayload?.stats ?? null;
       const reply = responseText?.trim() ? responseText.trim() : 'Keine Antwort erhalten.';
       setMessages((prev) => {
         if (!prev[assistantIndex]) return prev;
         const updated = [...prev];
-        updated[assistantIndex] = { ...updated[assistantIndex], content: reply };
+        const current = updated[assistantIndex];
+        updated[assistantIndex] = {
+          ...current,
+          content: reply,
+          meta: {
+            ...(current?.meta ?? {}),
+            stats: responseStats,
+            device: current?.meta?.device ?? 'gpu',
+          },
+        };
         return updated;
       });
     } catch (generateError) {
@@ -126,6 +163,7 @@ export default function LLMChat() {
         updated[assistantIndex] = {
           role: 'assistant',
           content: 'Antwort konnte nicht erstellt werden.',
+          meta: { stats: null, device: 'gpu' },
         };
         return updated;
       });
@@ -236,25 +274,105 @@ export default function LLMChat() {
             >
               {messages.length
                 ? messages.map((message, index) => {
+                    const isAssistant = message.role === 'assistant';
                     const isPendingMessage =
-                      isGenerating &&
-                      message.role === 'assistant' &&
-                      index === messages.length - 1;
-                    const content =
-                      message.content || (isPendingMessage ? 'Denke...' : '');
+                      isGenerating && isAssistant && index === messages.length - 1;
+                    const content = message.content || '';
+                    const hasContent = Boolean(content && content.trim().length > 0);
+                    const showLoader = isPendingMessage && !hasContent;
+                    const stats = message.meta?.stats;
+                    const hasStats =
+                      stats &&
+                      Number.isFinite(stats.latency) &&
+                      Number.isFinite(stats.ttft) &&
+                      Number.isFinite(stats.tps);
+                    const isStatsOpen = Boolean(expandedStats[index]);
                     return (
                       <div
                         key={`${message.role}-${index}`}
                         className={cx(
-                          styles['chat-message'],
+                          styles['chat-message-group'],
                           message.role === 'user' && styles.user,
-                          isPendingMessage && styles.pending,
                         )}
                       >
-                        <div className={styles['chat-role']}>
-                          {ROLE_LABELS[message.role] ?? message.role}
+                        {isAssistant ? (
+                          <div className={styles['chat-role']}>
+                            <span className={styles['chat-role-label']}>
+                              {ROLE_LABELS[message.role] ?? message.role}
+                            </span>
+                            <span className={styles['gpu-badge']}>Modell auf GPU</span>
+                          </div>
+                        ) : null}
+                        <div
+                          className={cx(
+                            styles['chat-message'],
+                            message.role === 'user' && styles.user,
+                            isPendingMessage && styles.pending,
+                            showLoader && styles.loading,
+                          )}
+                        >
+                          {showLoader ? (
+                            <div
+                              className={styles['chat-loader']}
+                              role="status"
+                              aria-live="polite"
+                              aria-label="Antwort wird erstellt"
+                            >
+                              <span className={styles['hex-loader']}>
+                                <span className={styles['hex-core']} />
+                              </span>
+                            </div>
+                          ) : (
+                            <p className={styles['chat-text']}>{content}</p>
+                          )}
                         </div>
-                        <p className={styles['chat-text']}>{content}</p>
+                        {isAssistant && !isPendingMessage && hasStats ? (
+                          <div className={styles['chat-stats']}>
+                            <button
+                              className={styles['chat-stats-toggle']}
+                              type="button"
+                              onClick={() => toggleStats(index)}
+                            >
+                              {isStatsOpen ? 'Statistiken ausblenden' : 'Statistiken anzeigen'}
+                            </button>
+                            {isStatsOpen ? (
+                              <div className={styles['chat-stats-panel']}>
+                                <div className={styles['chat-stat']}>
+                                  <span className={styles['chat-stat-label']}>
+                                    1st Token
+                                  </span>
+                                  <span className={styles['chat-stat-value']}>
+                                    {formatSeconds(stats.ttft)} s
+                                  </span>
+                                </div>
+                                <div className={styles['chat-stat']}>
+                                  <span className={styles['chat-stat-label']}>
+                                    Prefill-Rate
+                                  </span>
+                                  <span className={styles['chat-stat-value']}>
+                                    {formatTps(stats.prefillTps)} tok/s
+                                  </span>
+                                </div>
+                                <div className={styles['chat-stat']}>
+                                  <span className={styles['chat-stat-label']}>
+                                    Latenz
+                                  </span>
+                                  <span className={styles['chat-stat-value']}>
+                                    {formatSeconds(stats.latency)} s
+                                  </span>
+                                </div>
+                                <div className={styles['chat-stat']}>
+                                  <span className={styles['chat-stat-label']}>
+                                    Decode-Rate
+                                  </span>
+                                  <span className={styles['chat-stat-value']}>
+                                    {formatTps(stats.tps)} tok/s
+                                  </span>
+                                </div>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </div>
                     );
                   })

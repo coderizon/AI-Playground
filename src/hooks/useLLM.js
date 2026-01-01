@@ -58,6 +58,32 @@ function getProgressValue(report) {
   return 0;
 }
 
+function getCompletionTokens(usage) {
+  const tokens = usage?.completion_tokens;
+  return Number.isFinite(tokens) ? tokens : null;
+}
+
+function getPromptTokens(usage) {
+  const tokens = usage?.prompt_tokens;
+  return Number.isFinite(tokens) ? tokens : null;
+}
+
+function estimateTokenCount(text) {
+  if (!text) return 0;
+  const normalized = text.trim();
+  if (!normalized) return 0;
+  return normalized.split(/\s+/).length;
+}
+
+function estimatePromptTokens(messages) {
+  if (!Array.isArray(messages)) return 0;
+  const combined = messages
+    .map((message) => message?.content ?? '')
+    .filter(Boolean)
+    .join(' ');
+  return estimateTokenCount(combined);
+}
+
 function isWebGPUSupported() {
   if (typeof navigator === 'undefined') return false;
   return Boolean(navigator.gpu);
@@ -70,6 +96,7 @@ export function useLLM({ enabled = true, modelId } = {}) {
   const engineRef = useRef(null);
   const enginePromiseRef = useRef(null);
   const mountedRef = useRef(false);
+  const perfRef = useRef({ start: 0, firstToken: null, end: 0 });
 
   const resolvedModelId = useMemo(() => resolveModelId(modelId), [modelId]);
 
@@ -179,6 +206,19 @@ export function useLLM({ enabled = true, modelId } = {}) {
       }
 
       try {
+        const perf = perfRef.current;
+        perf.start = performance.now();
+        perf.firstToken = null;
+        perf.end = 0;
+
+        const sanitizedMessages = Array.isArray(messages)
+          ? messages.map((message) => ({
+              role: message?.role,
+              content: message?.content,
+            }))
+          : messages;
+        const promptTokenFallback = estimatePromptTokens(sanitizedMessages);
+
         if (!engine?.chat?.completions?.create) {
           const apiError = new Error(
             'WebLLM Chat API ist nicht verfügbar. Bitte aktualisiere @mlc-ai/web-llm.',
@@ -192,15 +232,20 @@ export function useLLM({ enabled = true, modelId } = {}) {
 
         const useStream = typeof onDelta === 'function';
         let response = null;
+        let usageTokens = null;
+        let promptTokens = null;
+        let chunkCount = 0;
 
         try {
           response = await engine.chat.completions.create({
-            messages,
+            messages: sanitizedMessages,
             ...(useStream ? { stream: true } : {}),
           });
         } catch (createError) {
           if (!useStream) throw createError;
-          response = await engine.chat.completions.create({ messages });
+          response = await engine.chat.completions.create({
+            messages: sanitizedMessages,
+          });
         }
 
         let content = '';
@@ -210,20 +255,67 @@ export function useLLM({ enabled = true, modelId } = {}) {
         if (useStream && isAsyncIterable) {
           for await (const chunk of response) {
             const delta = chunk?.choices?.[0]?.delta?.content ?? '';
-            if (!delta) continue;
-            content += delta;
-            onDelta?.(delta, content);
+            if (delta) {
+              if (perf.firstToken === null) {
+                perf.firstToken = performance.now();
+              }
+              chunkCount += 1;
+              content += delta;
+              onDelta?.(delta, content);
+            }
+            const chunkUsageTokens = getCompletionTokens(chunk?.usage);
+            if (chunkUsageTokens !== null) {
+              usageTokens = chunkUsageTokens;
+            }
+            const chunkPromptTokens = getPromptTokens(chunk?.usage);
+            if (chunkPromptTokens !== null) {
+              promptTokens = chunkPromptTokens;
+            }
           }
         } else {
           content = response?.choices?.[0]?.message?.content ?? '';
+          const responseUsageTokens = getCompletionTokens(response?.usage);
+          if (responseUsageTokens !== null) {
+            usageTokens = responseUsageTokens;
+          }
+          const responsePromptTokens = getPromptTokens(response?.usage);
+          if (responsePromptTokens !== null) {
+            promptTokens = responsePromptTokens;
+          }
           if (useStream && content) {
+            if (perf.firstToken === null) {
+              perf.firstToken = performance.now();
+            }
             onDelta?.(content, content);
           }
         }
+        perf.end = performance.now();
+        if (perf.firstToken === null) {
+          perf.firstToken = perf.end;
+        }
+        const latency = Math.max(0, perf.end - perf.start);
+        const ttft = Math.max(0, perf.firstToken - perf.start);
+        const prefillDurationMs = Math.max(0, perf.firstToken - perf.start);
+        const prefillTokens = promptTokens ?? promptTokenFallback;
+        const prefillTps =
+          prefillDurationMs > 0 ? prefillTokens / (prefillDurationMs / 1000) : 0;
+        const decodeDurationMs = Math.max(0, perf.end - perf.firstToken);
+        const fallbackTokens = estimateTokenCount(content) || chunkCount;
+        const totalTokens = usageTokens ?? fallbackTokens;
+        const tps =
+          decodeDurationMs > 0 ? totalTokens / (decodeDurationMs / 1000) : 0;
         if (mountedRef.current) {
           setStatus('ready');
         }
-        return content;
+        return {
+          text: content,
+          stats: {
+            latency,
+            ttft,
+            prefillTps,
+            tps,
+          },
+        };
       } catch (generateError) {
         if (mountedRef.current) {
           setError(generateError);

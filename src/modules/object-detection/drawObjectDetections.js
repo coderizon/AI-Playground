@@ -2,7 +2,7 @@ const DEFAULT_LINE_COLOR = '#00E5FF';
 const DEFAULT_LABEL_COLOR = '#0f172a';
 const DEFAULT_LABEL_BG = '#00E5FF';
 const DEFAULT_LINE_WIDTH = 2;
-const DEFAULT_FONT = '14px "Inter", sans-serif';
+const DEFAULT_FONT = '14px "Nunito", sans-serif';
 
 function getTopCategory(detection) {
   const categories = detection?.categories;
