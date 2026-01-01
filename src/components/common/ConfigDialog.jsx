@@ -7,6 +7,10 @@ const DEFAULT_CONFIG = {
   temperature: 0.8,
   topP: 1,
   topK: 40,
+  repetitionPenalty: 1.1,
+  presencePenalty: 0,
+  frequencyPenalty: 0,
+  seed: null,
   accelerator: 'GPU',
 };
 
@@ -14,6 +18,30 @@ const MAX_TOKENS_RANGE = {
   min: 32,
   max: 2048,
   step: 32,
+};
+
+const REPETITION_PENALTY_RANGE = {
+  min: 1,
+  max: 2,
+  step: 0.1,
+};
+
+const PRESENCE_PENALTY_RANGE = {
+  min: -2,
+  max: 2,
+  step: 0.1,
+};
+
+const FREQUENCY_PENALTY_RANGE = {
+  min: -2,
+  max: 2,
+  step: 0.1,
+};
+
+const SEED_RANGE = {
+  min: 0,
+  max: 10000,
+  step: 1,
 };
 
 const SLIDER_CONFIGS = [
@@ -45,6 +73,21 @@ const SLIDER_CONFIGS = [
     max: 2,
     step: 0.1,
   },
+  {
+    key: 'repetitionPenalty',
+    label: 'Repetition penalty',
+    ...REPETITION_PENALTY_RANGE,
+  },
+  {
+    key: 'presencePenalty',
+    label: 'Presence penalty',
+    ...PRESENCE_PENALTY_RANGE,
+  },
+  {
+    key: 'frequencyPenalty',
+    label: 'Frequency penalty',
+    ...FREQUENCY_PENALTY_RANGE,
+  },
 ];
 
 const ACCELERATOR_OPTIONS = ['GPU', 'CPU'];
@@ -62,6 +105,12 @@ function readNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function readOptionalNumber(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function normalizeConfig(config) {
   const safeConfig = config ?? DEFAULT_CONFIG;
   const maxTokens = clampNumber(
@@ -76,12 +125,36 @@ function normalizeConfig(config) {
   );
   const topP = clampNumber(readNumber(safeConfig.topP, DEFAULT_CONFIG.topP), 0, 1);
   const topK = clampNumber(readNumber(safeConfig.topK, DEFAULT_CONFIG.topK), 1, 100);
+  const repetitionPenalty = clampNumber(
+    readNumber(safeConfig.repetitionPenalty, DEFAULT_CONFIG.repetitionPenalty),
+    REPETITION_PENALTY_RANGE.min,
+    REPETITION_PENALTY_RANGE.max,
+  );
+  const presencePenalty = clampNumber(
+    readNumber(safeConfig.presencePenalty, DEFAULT_CONFIG.presencePenalty),
+    PRESENCE_PENALTY_RANGE.min,
+    PRESENCE_PENALTY_RANGE.max,
+  );
+  const frequencyPenalty = clampNumber(
+    readNumber(safeConfig.frequencyPenalty, DEFAULT_CONFIG.frequencyPenalty),
+    FREQUENCY_PENALTY_RANGE.min,
+    FREQUENCY_PENALTY_RANGE.max,
+  );
+  const seedValue = readOptionalNumber(safeConfig.seed);
+  const seed =
+    seedValue === null
+      ? null
+      : Math.round(clampNumber(seedValue, SEED_RANGE.min, SEED_RANGE.max));
 
   return {
     maxTokens: Math.round(maxTokens),
     temperature,
     topP,
     topK: Math.round(topK),
+    repetitionPenalty,
+    presencePenalty,
+    frequencyPenalty,
+    seed,
     accelerator: safeConfig.accelerator === 'CPU' ? 'CPU' : 'GPU',
   };
 }
@@ -137,6 +210,72 @@ function SliderRow({ label, value, min, max, step, onChange }) {
           onChange={handleChange}
           aria-label={`${label} value`}
         />
+      </div>
+    </div>
+  );
+}
+
+function SeedRow({ value, min, max, step, onChange }) {
+  const safeValue = Number.isFinite(value) ? value : min;
+  const percent = getPercent(safeValue, min, max);
+  const displayValue = Number.isFinite(value) ? String(Math.round(value)) : '';
+  const isAuto = value === null || value === undefined || value === '';
+
+  const handleSliderChange = (event) => {
+    const nextValue = Number(event.target.value);
+    if (!Number.isFinite(nextValue)) return;
+    const clamped = clampNumber(nextValue, min, max);
+    onChange(Math.round(clamped));
+  };
+
+  const handleInputChange = (event) => {
+    const rawValue = event.target.value;
+    if (rawValue === '') {
+      onChange(null);
+      return;
+    }
+    const nextValue = Number(rawValue);
+    if (!Number.isFinite(nextValue)) return;
+    const clamped = clampNumber(nextValue, min, max);
+    onChange(Math.round(clamped));
+  };
+
+  return (
+    <div className={styles.row}>
+      <span className={styles.label}>Seed</span>
+      <div className={styles.sliderRow}>
+        <input
+          className={styles.slider}
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={safeValue}
+          onChange={handleSliderChange}
+          aria-label="Seed slider"
+          style={{
+            background: `linear-gradient(to right, var(--slider-accent) 0%, var(--slider-accent) ${percent}%, #e7e0ec ${percent}%, #e7e0ec 100%)`,
+          }}
+        />
+        <input
+          className={styles.numberInput}
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={displayValue}
+          onChange={handleInputChange}
+          placeholder="auto"
+          aria-label="Seed value"
+        />
+        <button
+          className={styles.seedButton}
+          type="button"
+          onClick={() => onChange(null)}
+          disabled={isAuto}
+        >
+          Auto
+        </button>
       </div>
     </div>
   );
@@ -231,6 +370,18 @@ export default function ConfigDialog({ isOpen, config, onApply, onClose }) {
               onChange={updateField(slider.key, slider)}
             />
           ))}
+          <SeedRow
+            value={localConfig.seed}
+            min={SEED_RANGE.min}
+            max={SEED_RANGE.max}
+            step={SEED_RANGE.step}
+            onChange={(nextValue) =>
+              setLocalConfig((prev) => ({
+                ...prev,
+                seed: nextValue,
+              }))
+            }
+          />
 
           <div className={styles.row}>
             <span className={styles.label}>Accelerator</span>

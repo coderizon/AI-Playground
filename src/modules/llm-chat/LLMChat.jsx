@@ -27,6 +27,10 @@ export default function LLMChat() {
     topP: 1,
     temperature: 0.8,
     maxTokens: 2048,
+    repetitionPenalty: 1.1,
+    presencePenalty: 0,
+    frequencyPenalty: 0,
+    seed: null,
     accelerator: 'GPU',
   });
   const [messages, setMessages] = useState([]);

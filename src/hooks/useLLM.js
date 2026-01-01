@@ -95,12 +95,46 @@ function buildGenerationConfig(config) {
   const temperature = clampValue(Number(config.temperature), 0, 2);
   const topP = clampValue(Number(config.topP), 0, 1);
   const topK = clampValue(Number(config.topK), 1, 100);
+  const repetitionPenalty = clampValue(
+    Number(config.repetitionPenalty ?? config.repetition_penalty),
+    1,
+    2,
+  );
+  const presencePenalty = clampValue(
+    Number(config.presencePenalty ?? config.presence_penalty),
+    -2,
+    2,
+  );
+  const frequencyPenalty = clampValue(
+    Number(config.frequencyPenalty ?? config.frequency_penalty),
+    -2,
+    2,
+  );
+  const seedRaw = config?.seed;
+  let seedValue = null;
+  if (seedRaw !== null && seedRaw !== undefined && seedRaw !== '') {
+    const parsed = Number(seedRaw);
+    if (Number.isInteger(parsed)) {
+      seedValue = parsed;
+    }
+  }
 
   const payload = {};
   if (maxTokens !== null) payload.max_tokens = Math.round(maxTokens);
   if (temperature !== null) payload.temperature = temperature;
   if (topP !== null) payload.top_p = topP;
   if (topK !== null) payload.top_k = Math.round(topK);
+  if (repetitionPenalty !== null) payload.repetition_penalty = repetitionPenalty;
+  if (seedValue !== null) payload.seed = seedValue;
+  if (presencePenalty !== null) {
+    payload.presence_penalty = presencePenalty;
+  }
+  if (frequencyPenalty !== null) {
+    payload.frequency_penalty = frequencyPenalty;
+  }
+  if (payload.presence_penalty != null && payload.frequency_penalty == null) {
+    payload.frequency_penalty = 0;
+  }
   return payload;
 }
 
