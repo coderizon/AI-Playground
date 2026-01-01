@@ -1,0 +1,262 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 80;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.overlay[data-state='open'] {
+  opacity: 1;
+}
+
+.overlay[data-state='closing'] {
+  opacity: 0;
+}
+
+.card {
+  width: min(90vw, 400px);
+  max-height: min(640px, 88vh);
+  background: #f7f2fa;
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 4px 8px 3px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.card[data-state='open'] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.card[data-state='closing'] {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 400;
+  color: #1d1b20;
+  text-align: center;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #49454f;
+  margin: 0;
+}
+
+.readonlyValue {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1d1b20;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.slider {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  background: #e7e0ec;
+  border-radius: 999px;
+  outline: none;
+  accent-color: #6750a4;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6750a4;
+  box-shadow: 0 4px 10px rgba(103, 80, 164, 0.35);
+  cursor: pointer;
+  border: none;
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6750a4;
+  box-shadow: 0 4px 10px rgba(103, 80, 164, 0.35);
+  cursor: pointer;
+  border: none;
+}
+
+.slider::-moz-range-track {
+  height: 4px;
+  background: #e7e0ec;
+  border-radius: 999px;
+}
+
+.numberInput {
+  width: 60px;
+  height: 50px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid #79747e;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1d1b20;
+  text-align: center;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.numberInput:focus-visible {
+  outline: 2px solid rgba(103, 80, 164, 0.4);
+  outline-offset: 2px;
+  border-color: #6750a4;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid #79747e;
+  border-radius: 100px;
+  overflow: hidden;
+  height: 40px;
+  background: #ffffff;
+}
+
+.segmentButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: #49454f;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.segmentButton + .segmentButton {
+  border-left: 1px solid #79747e;
+}
+
+.segmentButton:hover {
+  background: rgba(103, 80, 164, 0.08);
+  color: #1d192b;
+}
+
+.segmentButtonActive {
+  background: #e8def8;
+  color: #1d192b;
+}
+
+.segmentCheck {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.textButton {
+  border: none;
+  background: transparent;
+  color: #6750a4;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0 16px;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 100px;
+  transition: background 120ms ease;
+}
+
+.textButton:hover {
+  background: rgba(103, 80, 164, 0.12);
+}
+
+.textButton:focus-visible {
+  outline: 2px solid rgba(103, 80, 164, 0.35);
+  outline-offset: 2px;
+}
+
+.primaryButton {
+  border: none;
+  background: #6750a4;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0 20px;
+  height: 40px;
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(103, 80, 164, 0.25);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(103, 80, 164, 0.3);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 520px) {
+  .card {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .sliderRow {
+    gap: 12px;
+  }
+
+  .numberInput {
+    width: 56px;
+  }
+}

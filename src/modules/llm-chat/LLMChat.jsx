@@ -3,6 +3,7 @@ import { MessageCirclePlus, SendHorizontal, SlidersHorizontal } from 'lucide-rea
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
+import ConfigDialog from '../../components/common/ConfigDialog.jsx';
 import { useLLM } from '../../hooks/useLLM.js';
 
 import styles from './LLMChat.module.css';
@@ -20,6 +21,13 @@ const ROLE_LABELS = {
 export default function LLMChat() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [modelConfig, setModelConfig] = useState({
+    topK: 40,
+    topP: 1,
+    temperature: 0.8,
+    accelerator: 'GPU',
+  });
   const [messages, setMessages] = useState([]);
   const [expandedStats, setExpandedStats] = useState({});
   const chatLogRef = useRef(null);
@@ -105,6 +113,15 @@ export default function LLMChat() {
     }));
   }, []);
 
+  const handleConfigApply = useCallback((nextConfig) => {
+    setModelConfig(nextConfig);
+    setIsConfigOpen(false);
+  }, []);
+
+  const handleConfigClose = useCallback(() => {
+    setIsConfigOpen(false);
+  }, []);
+
   const handleSend = useCallback(async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
@@ -123,6 +140,7 @@ export default function LLMChat() {
 
     try {
       const responsePayload = await generateResponse(nextMessages, {
+        config: modelConfig,
         onDelta: (_, fullText) => {
           triggerHaptic();
           setMessages((prev) => {
@@ -168,7 +186,7 @@ export default function LLMChat() {
         return updated;
       });
     }
-  }, [generateResponse, inputValue, isReady, messages, triggerHaptic]);
+  }, [generateResponse, inputValue, isReady, messages, modelConfig, triggerHaptic]);
 
   const handleSubmit = useCallback(
     (event) => {
@@ -252,6 +270,7 @@ export default function LLMChat() {
                   className={styles['chat-toolbar-action']}
                   type="button"
                   aria-label="Einstellungen"
+                  onClick={() => setIsConfigOpen(true)}
                 >
                   <SlidersHorizontal size={18} strokeWidth={2} />
                 </button>
@@ -404,6 +423,13 @@ export default function LLMChat() {
           </section>
         </main>
       </div>
+
+      <ConfigDialog
+        isOpen={isConfigOpen}
+        config={modelConfig}
+        onApply={handleConfigApply}
+        onClose={handleConfigClose}
+      />
     </div>
   );
 }

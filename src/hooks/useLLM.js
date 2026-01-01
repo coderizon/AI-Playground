@@ -84,6 +84,45 @@ function estimatePromptTokens(messages) {
   return estimateTokenCount(combined);
 }
 
+function clampValue(value, min, max) {
+  if (!Number.isFinite(value)) return null;
+  return Math.min(max, Math.max(min, value));
+}
+
+function buildGenerationConfig(config) {
+  if (!config) return {};
+  const temperature = clampValue(Number(config.temperature), 0, 2);
+  const topP = clampValue(Number(config.topP), 0, 1);
+  const topK = clampValue(Number(config.topK), 1, 100);
+
+  const payload = {};
+  if (temperature !== null) payload.temperature = temperature;
+  if (topP !== null) payload.top_p = topP;
+  if (topK !== null) payload.top_k = Math.round(topK);
+  return payload;
+}
+
+function buildChatCandidates(basePayload, useStream) {
+  const candidates = [];
+  const hasTopK = basePayload.top_k != null;
+
+  if (useStream) {
+    candidates.push({ ...basePayload, stream: true });
+    if (hasTopK) {
+      const { top_k, ...rest } = basePayload;
+      candidates.push({ ...rest, stream: true });
+    }
+  }
+
+  candidates.push(basePayload);
+  if (hasTopK) {
+    const { top_k, ...rest } = basePayload;
+    candidates.push(rest);
+  }
+
+  return candidates;
+}
+
 function isWebGPUSupported() {
   if (typeof navigator === 'undefined') return false;
   return Boolean(navigator.gpu);
@@ -186,7 +225,7 @@ export function useLLM({ enabled = true, modelId } = {}) {
   }, []);
 
   const generateResponse = useCallback(
-    async (messages, { onDelta } = {}) => {
+    async (messages, { onDelta, config } = {}) => {
       if (!isWebGPUSupported()) {
         const gpuError = new Error(
           'WebGPU ist auf diesem Gerät nicht verfügbar. Bitte nutze einen aktuellen Desktop-Browser.',
@@ -218,6 +257,7 @@ export function useLLM({ enabled = true, modelId } = {}) {
             }))
           : messages;
         const promptTokenFallback = estimatePromptTokens(sanitizedMessages);
+        const generationConfig = buildGenerationConfig(config);
 
         if (!engine?.chat?.completions?.create) {
           const apiError = new Error(
@@ -236,16 +276,25 @@ export function useLLM({ enabled = true, modelId } = {}) {
         let promptTokens = null;
         let chunkCount = 0;
 
-        try {
-          response = await engine.chat.completions.create({
-            messages: sanitizedMessages,
-            ...(useStream ? { stream: true } : {}),
-          });
-        } catch (createError) {
-          if (!useStream) throw createError;
-          response = await engine.chat.completions.create({
-            messages: sanitizedMessages,
-          });
+        const basePayload = {
+          messages: sanitizedMessages,
+          ...generationConfig,
+        };
+        const candidates = buildChatCandidates(basePayload, useStream);
+        let lastError = null;
+
+        for (const payload of candidates) {
+          try {
+            response = await engine.chat.completions.create(payload);
+            lastError = null;
+            break;
+          } catch (createError) {
+            lastError = createError;
+          }
+        }
+
+        if (!response && lastError) {
+          throw lastError;
         }
 
         let content = '';
