@@ -1,19 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgpu';
-import '@tensorflow/tfjs-backend-wasm';
 import { MessageCirclePlus, SendHorizontal } from 'lucide-react';
+import { TeachableLLM, selectBackend } from '@genai-fi/nanogpt';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import chatStyles from '../llm-chat/LLMChat.module.css';
-import {
-  createCharTokenizer,
-  createNanoTransformer,
-  generateNanoText,
-  setEncoderTrainable,
-  trainNanoTransformer,
-  warmupModel,
-} from './nanoTransformer.js';
 import './LLMTeachable.css';
 
 const DEFAULT_TEXT = `Heute ist Dienstag. Mia geht in die fuenfte Klasse.
@@ -68,6 +58,12 @@ const ROLE_LABELS = {
   assistant: 'Modell',
 };
 
+const BACKEND_LABELS = {
+  webgpu: 'WebGPU',
+  webgl: 'WebGL',
+  cpu: 'CPU',
+};
+
 function cx(...classes) {
   return classes.filter(Boolean).join(' ');
 }
@@ -113,15 +109,13 @@ export default function LLMTeachable() {
   const [status, setStatus] = useState('Backend wird initialisiert...');
   const [trainingText, setTrainingText] = useState(DEFAULT_TEXT);
 
-  const [maxVocabSize, setMaxVocabSize] = useState(500);
-  const [contextWindow, setContextWindow] = useState(64);
-  const [embedDim, setEmbedDim] = useState(128);
-  const [numLayers, setNumLayers] = useState(3);
+  const [vocabSize, setVocabSize] = useState(500);
+  const [blockSize, setBlockSize] = useState(64);
+  const [nEmbed, setNEmbed] = useState(128);
+  const [nLayer, setNLayer] = useState(3);
   const [batchSize, setBatchSize] = useState(8);
   const [epochs, setEpochs] = useState(40);
-  const [stepsPerEpoch, setStepsPerEpoch] = useState(50);
   const [learningRate, setLearningRate] = useState(0.0008);
-  const [freezeEncoder, setFreezeEncoder] = useState(false);
 
   const [lossHistory, setLossHistory] = useState([]);
   const [currentLoss, setCurrentLoss] = useState(null);
@@ -136,11 +130,7 @@ export default function LLMTeachable() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const modelRef = useRef(null);
-  const tokenizerRef = useRef(null);
-  const optimizerRef = useRef(null);
-  const stopRef = useRef(false);
   const generateStopRef = useRef(false);
-  const trainedConfigRef = useRef(null);
   const chatLogRef = useRef(null);
   const lastRenderRef = useRef(0);
 
@@ -150,30 +140,44 @@ export default function LLMTeachable() {
     const initBackend = async () => {
       setStatus('WebGPU wird initialisiert...');
       try {
-        await tf.setBackend('webgpu');
-        await tf.ready();
+        const selected = await selectBackend('webgpu');
         if (cancelled) return;
+        const label = BACKEND_LABELS[selected] ?? 'WebGPU';
         setBackendReady(true);
-        setBackendLabel('WebGPU');
-        setStatus('Backend: WebGPU bereit.');
+        setBackendLabel(label);
+        setStatus(`Backend: ${label} bereit.`);
+        return;
       } catch (error) {
-        console.warn('WebGPU nicht verfuegbar, versuche WASM.', error);
-        try {
-          await tf.setBackend('wasm');
-          await tf.ready();
-          if (cancelled) return;
-          setBackendReady(true);
-          setBackendLabel('WASM');
-          setStatus('Backend: WASM bereit.');
-        } catch (fallbackError) {
-          console.warn('WASM nicht verfuegbar, nutze CPU.', fallbackError);
-          await tf.setBackend('cpu');
-          await tf.ready();
-          if (cancelled) return;
-          setBackendReady(true);
-          setBackendLabel('CPU');
-          setStatus('Backend: CPU bereit (langsam).');
-        }
+        console.warn('WebGPU nicht verfuegbar, versuche WebGL.', error);
+      }
+
+      setStatus('WebGL wird initialisiert...');
+      try {
+        const selected = await selectBackend('webgl');
+        if (cancelled) return;
+        const label = BACKEND_LABELS[selected] ?? 'WebGL';
+        setBackendReady(true);
+        setBackendLabel(label);
+        setStatus(`Backend: ${label} bereit.`);
+        return;
+      } catch (error) {
+        console.warn('WebGL nicht verfuegbar, nutze CPU.', error);
+      }
+
+      setStatus('CPU wird initialisiert...');
+      try {
+        const selected = await selectBackend('cpu');
+        if (cancelled) return;
+        const label = BACKEND_LABELS[selected] ?? 'CPU';
+        setBackendReady(true);
+        setBackendLabel(label);
+        setStatus(`Backend: ${label} bereit (langsam).`);
+      } catch (error) {
+        console.warn('Backend-Initialisierung fehlgeschlagen.', error);
+        if (cancelled) return;
+        setBackendReady(false);
+        setBackendLabel('');
+        setStatus('Backend konnte nicht initialisiert werden.');
       }
     };
 
@@ -187,16 +191,7 @@ export default function LLMTeachable() {
   useEffect(() => {
     return () => {
       generateStopRef.current = true;
-      if (modelRef.current) {
-        modelRef.current.dispose();
-        modelRef.current = null;
-      }
-      tokenizerRef.current = null;
-      trainedConfigRef.current = null;
-      if (optimizerRef.current) {
-        optimizerRef.current.dispose();
-        optimizerRef.current = null;
-      }
+      modelRef.current = null;
     };
   }, []);
 
@@ -211,22 +206,21 @@ export default function LLMTeachable() {
 
   const estimatedStats = useMemo(() => {
     const uniqueChars = new Set(trainingText).size;
-    const estimatedVocab = Math.min(maxVocabSize, Math.max(2, uniqueChars + 1));
+    const estimatedVocab = Math.min(vocabSize, Math.max(2, uniqueChars + 1));
     return {
       uniqueChars,
       estimatedVocab,
       textLength: trainingText.length,
     };
-  }, [maxVocabSize, trainingText]);
+  }, [vocabSize, trainingText]);
 
-  const canTrain = backendReady && trainingText.length >= contextWindow + 1;
+  const canTrain = backendReady && trainingText.length >= blockSize + 1;
   const canGenerate = hasModel && !isTraining;
   const canSend = canGenerate && !isGenerating && promptInput.trim().length > 0;
 
   const handleStop = useCallback(() => {
     if (!isTraining) return;
-    stopRef.current = true;
-    setStatus('Training wird gestoppt...');
+    setStatus('Training kann nicht abgebrochen werden.');
   }, [isTraining]);
 
   const handleTrain = useCallback(async () => {
@@ -240,105 +234,118 @@ export default function LLMTeachable() {
       return;
     }
 
-    if (trainingText.length < contextWindow + 1) {
+    if (trainingText.length < blockSize + 1) {
       setStatus('Text ist zu kurz fuer das Kontextfenster.');
       return;
     }
 
     setIsTraining(true);
-    stopRef.current = false;
-    setStatus('Tokenisierung und Modellaufbau...');
+    generateStopRef.current = false;
+    setStatus('Modell wird geladen...');
     setProgress(0);
     setLossHistory([]);
     setCurrentLoss(null);
+    setActiveVocabSize(null);
+    setTokenCount(0);
     setMessages([]);
     setPromptInput('');
     setHasModel(false);
 
-    if (modelRef.current) {
-      modelRef.current.dispose();
-      modelRef.current = null;
-    }
-    if (optimizerRef.current) {
-      optimizerRef.current.dispose();
-      optimizerRef.current = null;
-    }
+    modelRef.current = null;
+
+    let handleTrainStep = null;
 
     try {
-      const tokenizer = createCharTokenizer(trainingText, maxVocabSize);
-      const tokens = tokenizer.encode(trainingText);
-      tokenizerRef.current = tokenizer;
-      setActiveVocabSize(tokenizer.vocabSize);
-      setTokenCount(tokens.length);
-      trainedConfigRef.current = {
-        contextWindow,
-        vocabSize: tokenizer.vocabSize,
+      const config = {
+        vocabSize,
+        blockSize,
+        nLayer,
+        nHead: HEADS,
+        nEmbed,
+        dropout: 0.1,
+        useRope: true,
       };
 
-      const model = createNanoTransformer({
-        vocabSize: tokenizer.vocabSize,
-        contextWindow,
-        embedDim,
-        numHeads: HEADS,
-        numLayers,
-        ffDim: embedDim * 2,
+      const llm = TeachableLLM.create('char', config);
+      modelRef.current = llm;
+
+      await new Promise((resolve) => {
+        llm.on('loaded', resolve);
       });
 
-      setEncoderTrainable(model, !freezeEncoder);
-      modelRef.current = model;
+      const stepsPerEpoch = Math.max(
+        1,
+        Math.floor((trainingText.length - blockSize - 1) / batchSize),
+      );
+      const maxSteps = Math.max(1, stepsPerEpoch * epochs);
+
+      handleTrainStep = (log, trainProgress) => {
+        setLossHistory((prev) => [...prev, log.loss]);
+        setCurrentLoss(log.loss);
+
+        const stepIndex = Number.isFinite(log?.step) ? log.step + 1 : 0;
+        const safeStep = Math.min(stepIndex || 0, maxSteps);
+        const percent = Math.round((safeStep / maxSteps) * 100);
+        setProgress(percent);
+
+        const remainingSeconds = Number.isFinite(trainProgress?.timeRemaining)
+          ? Math.max(0, Math.round(trainProgress.timeRemaining))
+          : Number.isFinite(trainProgress?.remaining)
+            ? Math.max(0, Math.round(trainProgress.remaining / 1000))
+            : null;
+
+        if (Number.isFinite(remainingSeconds)) {
+          setStatus(
+            `Training laeuft... ${percent}% | Schritt ${safeStep}/${maxSteps} | ${remainingSeconds}s`,
+          );
+        } else {
+          setStatus(
+            `Training laeuft... ${percent}% | Schritt ${safeStep}/${maxSteps}`,
+          );
+        }
+      };
+
+      setStatus('Tokeniser wird trainiert...');
+
+      llm.on('trainStep', handleTrainStep);
+
+      const trainedVocabSize = await llm.trainTokeniser([trainingText]);
+      setActiveVocabSize(trainedVocabSize);
+      setTokenCount(trainingText.length);
       setHasModel(true);
-
-      setStatus('Warm-up fuer Backend...');
-      await warmupModel(model, contextWindow);
-
-      const optimizer = tf.train.adam(learningRate);
-      optimizerRef.current = optimizer;
 
       setStatus('Training laeuft...');
 
-      await trainNanoTransformer({
-        model,
-        tokens,
-        vocabSize: tokenizer.vocabSize,
-        contextWindow,
+      await llm.train([trainingText], {
         batchSize,
+        learningRate,
         epochs,
-        stepsPerEpoch,
-        optimizer,
-        onEpochEnd: ({ epoch, loss }) => {
-          setLossHistory((prev) => [...prev, loss]);
-          setCurrentLoss(loss);
-          setProgress(Math.round(((epoch + 1) / epochs) * 100));
-          setStatus(`Epoche ${epoch + 1}/${epochs}`);
-        },
-        shouldStop: () => stopRef.current,
+        maxSteps,
       });
 
-      if (stopRef.current) {
-        setStatus('Training abgebrochen.');
-      } else {
-        setStatus('Training abgeschlossen.');
-      }
+      setProgress(100);
+      setStatus('Training abgeschlossen.');
     } catch (error) {
       console.error(error);
       setStatus(`Fehler: ${error.message}`);
     } finally {
+      if (modelRef.current && handleTrainStep) {
+        modelRef.current.off('trainStep', handleTrainStep);
+      }
       setIsTraining(false);
     }
   }, [
     backendReady,
     batchSize,
-    contextWindow,
-    embedDim,
+    blockSize,
     epochs,
-    freezeEncoder,
     isGenerating,
     isTraining,
     learningRate,
-    maxVocabSize,
-    numLayers,
-    stepsPerEpoch,
+    nEmbed,
+    nLayer,
     trainingText,
+    vocabSize,
   ]);
 
   const handleClearChat = useCallback(() => {
@@ -357,7 +364,7 @@ export default function LLMTeachable() {
       const seed = promptInput.trim();
       if (!seed) return;
 
-      if (!hasModel || !modelRef.current || !tokenizerRef.current) {
+      if (!hasModel || !modelRef.current) {
         setStatus('Bitte zuerst trainieren.');
         return;
       }
@@ -375,6 +382,7 @@ export default function LLMTeachable() {
       ]);
 
       const updateAssistant = (pending) => {
+        if (generateStopRef.current) return;
         setMessages((prev) => {
           if (!prev.length) return prev;
           const updated = [...prev];
@@ -386,27 +394,24 @@ export default function LLMTeachable() {
         });
       };
 
-      const contextForGeneration =
-        trainedConfigRef.current?.contextWindow ?? contextWindow;
+      const generator = modelRef.current.generator();
+
+      generator.on('tokens', (tokens) => {
+        if (generateStopRef.current) return;
+        const decoded = modelRef.current?.tokeniser.decode(tokens) ?? '';
+        assistantText += decoded;
+        const now = Date.now();
+        if (now - lastRenderRef.current > 60) {
+          lastRenderRef.current = now;
+          updateAssistant(true);
+        }
+      });
 
       try {
-        await generateNanoText({
-          model: modelRef.current,
-          tokenizer: tokenizerRef.current,
-          seed,
-          contextWindow: contextForGeneration,
+        await generator.generate(seed, {
           maxNewTokens: GENERATION_CONFIG.maxNewTokens,
           temperature: GENERATION_CONFIG.temperature,
           topK: GENERATION_CONFIG.topK,
-          shouldStop: () => generateStopRef.current,
-          onToken: (token) => {
-            assistantText += token;
-            const now = Date.now();
-            if (now - lastRenderRef.current > 60) {
-              lastRenderRef.current = now;
-              updateAssistant(true);
-            }
-          },
         });
 
         updateAssistant(false);
@@ -419,7 +424,7 @@ export default function LLMTeachable() {
         setIsGenerating(false);
       }
     },
-    [contextWindow, hasModel, isGenerating, promptInput],
+    [hasModel, isGenerating, promptInput],
   );
 
   const handlePromptKeyDown = useCallback(
@@ -449,7 +454,7 @@ export default function LLMTeachable() {
           <span className="icon-lines" />
         </button>
         <div>
-          <h1>Teachable LLM (Nano-Transformer)</h1>
+          <h1>Teachable LLM (NanoGPT)</h1>
           <p className="page-subtitle">
             Trainiere ein winziges Sprachmodell direkt im Browser (iPad/WebGPU).
           </p>
@@ -489,16 +494,16 @@ export default function LLMTeachable() {
                   min={100}
                   max={2000}
                   step={100}
-                  value={maxVocabSize}
-                  onChange={(event) => setMaxVocabSize(Number(event.target.value))}
+                  value={vocabSize}
+                  onChange={(event) => setVocabSize(Number(event.target.value))}
                   disabled={isTraining}
                 />
               </label>
               <label className="field">
                 <span>Kontextfenster</span>
                 <select
-                  value={contextWindow}
-                  onChange={(event) => setContextWindow(Number(event.target.value))}
+                  value={blockSize}
+                  onChange={(event) => setBlockSize(Number(event.target.value))}
                   disabled={isTraining}
                 >
                   <option value={64}>64 Tokens</option>
@@ -518,8 +523,8 @@ export default function LLMTeachable() {
               <label className="field">
                 <span>Embedding</span>
                 <select
-                  value={embedDim}
-                  onChange={(event) => setEmbedDim(Number(event.target.value))}
+                  value={nEmbed}
+                  onChange={(event) => setNEmbed(Number(event.target.value))}
                   disabled={isTraining}
                 >
                   <option value={64}>64 Dim</option>
@@ -529,8 +534,8 @@ export default function LLMTeachable() {
               <label className="field">
                 <span>Transformer-Layer</span>
                 <select
-                  value={numLayers}
-                  onChange={(event) => setNumLayers(Number(event.target.value))}
+                  value={nLayer}
+                  onChange={(event) => setNLayer(Number(event.target.value))}
                   disabled={isTraining}
                 >
                   <option value={2}>2 Layer</option>
@@ -561,17 +566,6 @@ export default function LLMTeachable() {
                 />
               </label>
               <label className="field">
-                <span>Steps/Epoche</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={200}
-                  value={stepsPerEpoch}
-                  onChange={(event) => setStepsPerEpoch(Number(event.target.value))}
-                  disabled={isTraining}
-                />
-              </label>
-              <label className="field">
                 <span>Learning Rate</span>
                 <input
                   type="number"
@@ -584,16 +578,6 @@ export default function LLMTeachable() {
                 />
               </label>
             </div>
-
-            <label className="checkbox-field">
-              <input
-                type="checkbox"
-                checked={freezeEncoder}
-                onChange={(event) => setFreezeEncoder(event.target.checked)}
-                disabled={isTraining}
-              />
-              Encoder einfrieren (nur Output-Layer trainieren)
-            </label>
 
             <div className="actions">
               <button
@@ -614,7 +598,7 @@ export default function LLMTeachable() {
             </div>
             {!canTrain && (
               <p className="hint">
-                Hinweis: Mindestens {contextWindow + 1} Zeichen fuer Training.
+                Hinweis: Mindestens {blockSize + 1} Zeichen fuer Training.
               </p>
             )}
           </section>
@@ -654,15 +638,15 @@ export default function LLMTeachable() {
             <div className="loss-card">
               <div className="loss-header">
                 <span>Loss-Verlauf</span>
-                <span>{lossHistory.length ? `${lossHistory.length} Epochen` : '---'}</span>
+                <span>{lossHistory.length ? `${lossHistory.length} Schritte` : '---'}</span>
               </div>
               <LossChart values={lossHistory} />
             </div>
 
             <div className="note">
               <p>
-                Speicherstrategie: Jede Trainings-Iteration laeuft in tf.tidy(),
-                Inputs/Labels werden sofort freigegeben, Batch Size ist klein.
+                Training und Speicherverwaltung laufen in @genai-fi/nanogpt,
+                kleine Modelle halten die Auslastung niedrig.
               </p>
             </div>
           </section>
@@ -670,9 +654,7 @@ export default function LLMTeachable() {
           <section className="card llm-teachable-chat-wrapper">
             <div className={cx(chatStyles['chat-card'], 'llm-teachable-chat')}>
               <div className={chatStyles['chat-toolbar']}>
-                <span className={chatStyles['model-chip']}>
-                  Teachable Nano-Transformer
-                </span>
+                <span className={chatStyles['model-chip']}>Teachable NanoGPT</span>
                 <div className={chatStyles['chat-toolbar-actions']}>
                   <button
                     className={chatStyles['chat-toolbar-action']}
