@@ -131,6 +131,7 @@ export default function LLMTeachable() {
 
   const modelRef = useRef(null);
   const generateStopRef = useRef(false);
+  const decodeQueueRef = useRef(Promise.resolve());
   const chatLogRef = useRef(null);
   const lastRenderRef = useRef(0);
 
@@ -371,6 +372,7 @@ export default function LLMTeachable() {
 
       setIsGenerating(true);
       generateStopRef.current = false;
+      decodeQueueRef.current = Promise.resolve();
       setStatus('Generiere Text...');
       setPromptInput('');
 
@@ -396,16 +398,28 @@ export default function LLMTeachable() {
 
       const generator = modelRef.current.generator();
 
-      generator.on('tokens', (tokens) => {
-        if (generateStopRef.current) return;
-        const decoded = modelRef.current?.tokeniser.decode(tokens) ?? '';
-        assistantText += decoded;
-        const now = Date.now();
-        if (now - lastRenderRef.current > 60) {
-          lastRenderRef.current = now;
-          updateAssistant(true);
-        }
-      });
+      const enqueueDecode = (tokens) => {
+        decodeQueueRef.current = decodeQueueRef.current
+          .then(async () => {
+            if (generateStopRef.current) return;
+            const tokeniser = modelRef.current?.tokeniser;
+            if (!tokeniser) return;
+            const decoded = await tokeniser.decode(tokens);
+            if (!decoded) return;
+            assistantText += decoded;
+            const now = Date.now();
+            if (now - lastRenderRef.current > 60) {
+              lastRenderRef.current = now;
+              updateAssistant(true);
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            setStatus(`Fehler: ${error.message}`);
+          });
+      };
+
+      generator.on('tokens', enqueueDecode);
 
       try {
         await generator.generate(seed, {
@@ -414,11 +428,13 @@ export default function LLMTeachable() {
           topK: GENERATION_CONFIG.topK,
         });
 
+        await decodeQueueRef.current;
         updateAssistant(false);
         setStatus('Generierung abgeschlossen.');
       } catch (error) {
         console.error(error);
         setStatus(`Fehler: ${error.message}`);
+        await decodeQueueRef.current;
         updateAssistant(false);
       } finally {
         setIsGenerating(false);
