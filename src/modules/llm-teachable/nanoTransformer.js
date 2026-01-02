@@ -103,7 +103,11 @@ class MultiHeadSelfAttention extends tf.layers.Layer {
 
       const scale = tf.scalar(1 / Math.sqrt(this.headDim));
       const scores = tf.mul(tf.matMul(qHeads, kHeads, false, true), scale);
-      const weights = tf.softmax(scores);
+      const mask = tf.linalg.bandPart(tf.ones([seqLen, seqLen]), -1, 0);
+      const additiveMask = tf.mul(tf.sub(1, mask), tf.scalar(-1e9))
+        .reshape([1, 1, seqLen, seqLen]);
+      const maskedScores = scores.add(additiveMask);
+      const weights = tf.softmax(maskedScores);
       const attention = tf.matMul(weights, vHeads)
         .transpose([0, 2, 1, 3])
         .reshape([batchSize, seqLen, this.embedDim]);

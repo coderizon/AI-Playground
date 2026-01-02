@@ -16,15 +16,51 @@ import {
 } from './nanoTransformer.js';
 import './LLMTeachable.css';
 
-const DEFAULT_TEXT = `Das ist ein winziger Demo-Datensatz.
-Das Modell soll kurze Muster lernen.
-Du kannst beliebigen Text einfuegen.`;
+const DEFAULT_TEXT = `Heute ist Dienstag. Mia geht in die fuenfte Klasse.
+Sie steht frueh auf, packt ihre Tasche und isst Muesli.
+In die Tasche kommen: Heft, Stift, Brotbox, Flasche.
+Vor der Schule trifft sie ihren Freund Ali und sagt: Guten Morgen.
+Ali sagt: Guten Morgen, heute ist Sport!
+
+Im Klassenzimmer sitzt die Klasse im Kreis.
+Die Lehrerin fragt: Wer moechte vorlesen?
+Mia liest langsam, Ali liest schnell, Lara liest laut.
+Die Klasse hoert zu und klatscht am Ende.
+
+In der Pause spielt die Klasse auf dem Hof.
+Ein Ball rollt, ein Seil schwingt, ein Drachen steigt.
+Zwei Kinder laufen um die Wette. Eins ruft: Los gehts!
+Alle lachen, niemand schubst, und alle teilen fair.
+
+Nach der Schule geht Mia nach Hause.
+Sie macht Hausaufgaben, isst einen Apfel und trinkt Wasser.
+Danach baut sie ein kleines Modell aus Papier.
+Sie faltet, sie klebt, sie schreibt ihren Namen darauf.
+
+Am Nachmittag trifft sie ihre Freunde im Park.
+Sie spielen Fangen. Sie spielen Verstecken. Sie spielen Fussball.
+Der Himmel ist blau, die Wolken ziehen langsam.
+Ein Hund bellt, ein Vogel singt, die Sonne ist warm.
+
+Am Abend erzaehlt Mia ihrer Familie vom Tag.
+Sie sagt: Heute war spannend, heute war ruhig, heute war lustig.
+Die Familie hoert zu und plant den naechsten Tag.
+
+Mini-Geschichte:
+Ein kleiner Drache findet einen glitzernden Stein.
+Er hebt den Stein auf, laeuft nach Hause und zeigt ihn stolz.
+Sein Freund, ein kleiner Fuchs, sagt: Lass uns ein Abenteuer starten!
+Sie gehen den Weg entlang, ueber den Bach und durch den Wald.
+
+Merksaetze:
+Ein guter Freund hilft. Ein gutes Team teilt. Ein guter Plan spart Zeit.
+Ein neuer Tag bringt neue Ideen. Ein langer Weg braucht Pausen.`;
 
 const HEADS = 4;
 const GENERATION_CONFIG = {
-  maxNewTokens: 120,
-  temperature: 0.8,
-  topK: 40,
+  maxNewTokens: 180,
+  temperature: 0.6,
+  topK: 20,
 };
 
 const ROLE_LABELS = {
@@ -79,12 +115,12 @@ export default function LLMTeachable() {
 
   const [maxVocabSize, setMaxVocabSize] = useState(500);
   const [contextWindow, setContextWindow] = useState(64);
-  const [embedDim, setEmbedDim] = useState(64);
-  const [numLayers, setNumLayers] = useState(2);
-  const [batchSize, setBatchSize] = useState(4);
-  const [epochs, setEpochs] = useState(12);
-  const [stepsPerEpoch, setStepsPerEpoch] = useState(20);
-  const [learningRate, setLearningRate] = useState(0.001);
+  const [embedDim, setEmbedDim] = useState(128);
+  const [numLayers, setNumLayers] = useState(3);
+  const [batchSize, setBatchSize] = useState(8);
+  const [epochs, setEpochs] = useState(40);
+  const [stepsPerEpoch, setStepsPerEpoch] = useState(50);
+  const [learningRate, setLearningRate] = useState(0.0008);
   const [freezeEncoder, setFreezeEncoder] = useState(false);
 
   const [lossHistory, setLossHistory] = useState([]);
