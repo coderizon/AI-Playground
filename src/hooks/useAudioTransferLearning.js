@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as tf from '@tensorflow/tfjs';
 import * as speechCommands from '@tensorflow-models/speech-commands';
+import { initTensorFlowBackend } from '../utils/tensorflow-init.js';
 
 const DEFAULT_SAMPLE_DURATION_SEC = 1;
 const DEFAULT_SNIPPET_DURATION_SEC = 0.25;
@@ -72,7 +73,7 @@ export function useAudioTransferLearning({
     setStatus('loading');
 
     (async () => {
-      await tf.ready();
+      await initTensorFlowBackend();
       const recognizer = speechCommands.create('BROWSER_FFT');
       await recognizer.ensureModelLoaded();
       if (cancelled) return;

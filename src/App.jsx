@@ -27,8 +27,14 @@ const VisualQA = lazy(() =>
 const LLMChat = lazy(() =>
   import('./modules/llm-chat/LLMChat.jsx'),
 );
+const LLMTeachable = lazy(() =>
+  import('./modules/llm-teachable/LLMTeachable.jsx'),
+);
 const ImageSegmentation = lazy(() =>
   import('./modules/image-segmentation/ImageSegmentation.jsx'),
+);
+const TextClassification = lazy(() =>
+  import('./modules/text-classification/TextClassification.jsx'),
 );
 const FaqPage = lazy(() => import('./modules/faq/FaqPage.jsx'));
 
@@ -77,6 +83,22 @@ export default function App() {
         element={
           <LazyRoute>
             <LLMChat />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/llm-teachable"
+        element={
+          <LazyRoute>
+            <LLMTeachable />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/text-classification"
+        element={
+          <LazyRoute>
+            <TextClassification />
           </LazyRoute>
         }
       />

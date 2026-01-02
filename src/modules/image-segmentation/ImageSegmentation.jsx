@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import * as tf from '@tensorflow/tfjs';
 import * as deeplab from '@tensorflow-models/deeplab';
+import { initTensorFlowBackend } from '../../utils/tensorflow-init.js';
 
 import NavigationDrawer from '../../components/common/NavigationDrawer.jsx';
 import ModelSwitcher from '../../components/common/ModelSwitcher.jsx';
@@ -147,13 +147,7 @@ export default function ImageSegmentation() {
       setModelStatus('loading');
 
       modelPromiseRef.current = (async () => {
-        await tf.ready();
-        try {
-          await tf.setBackend('webgl');
-          await tf.ready();
-        } catch {
-          // Use the default backend.
-        }
+        await initTensorFlowBackend();
 
         const model = await deeplab.load(MODEL_CONFIG);
         modelRef.current = model;

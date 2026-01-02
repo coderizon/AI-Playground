@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import * as tf from '@tensorflow/tfjs';
+import { initTensorFlowBackend } from '../utils/tensorflow-init.js';
 
 const MOBILENET_URL =
   'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1';
@@ -12,14 +13,7 @@ async function loadMobileNetOnce() {
   if (mobilenetPromise) return mobilenetPromise;
 
   mobilenetPromise = (async () => {
-    await tf.ready();
-
-    try {
-      await tf.setBackend('webgl');
-      await tf.ready();
-    } catch {
-      // Fall back to the default backend.
-    }
+    await initTensorFlowBackend();
 
     const model = await tf.loadGraphModel(MOBILENET_URL, { fromTFHub: true });
 

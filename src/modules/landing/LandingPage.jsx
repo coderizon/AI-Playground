@@ -96,6 +96,33 @@ const MODELS = [
     hasHero: true,
   },
   {
+    id: 'text-klassifikation',
+    mode: 'text',
+    title: 'Textklassifikation',
+    description: 'Sätze per Embeddings klassifizieren.',
+    imageSrc: '/assets/images/llm-chatbot.png',
+    imageAlt: 'Textklassifikation Vorschau',
+    tags: [
+      { label: 'Trainierbar', variant: 'primary' },
+      { label: 'Embeddings', variant: 'warning' },
+    ],
+    hasHero: true,
+  },
+  {
+    id: 'llm-teachable',
+    mode: 'text',
+    title: 'Teachable LLM',
+    description: 'Mini-Transformer direkt im Browser trainieren.',
+    imageSrc: '/assets/images/llm-chatbot.png',
+    imageAlt: 'Teachable LLM Vorschau',
+    tags: [
+      { label: 'Trainierbar', variant: 'primary' },
+      { label: 'WebGPU', variant: 'primary' },
+      { label: 'Experimentell', variant: 'warning' },
+    ],
+    hasHero: true,
+  },
+  {
     id: 'llm-chat',
     mode: 'text',
     title: 'LLM Chatbot',
@@ -150,6 +177,14 @@ export default function LandingPage() {
       }
       if (model?.id === 'audioerkennung') {
         navigate('/audio-classification');
+        return;
+      }
+      if (model?.id === 'text-klassifikation') {
+        navigate('/text-classification');
+        return;
+      }
+      if (model?.id === 'llm-teachable') {
+        navigate('/llm-teachable');
         return;
       }
       if (model?.id === 'llm-chat') {

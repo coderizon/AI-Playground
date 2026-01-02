@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import * as tf from '@tensorflow/tfjs';
 import * as poseDetection from '@tensorflow-models/pose-detection';
+import { initTensorFlowBackend } from '../utils/tensorflow-init.js';
 
 const MOVENET_MODEL = poseDetection.SupportedModels.MoveNet;
 const MOVENET_CONFIG = {
@@ -63,14 +63,7 @@ async function loadMoveNetOnce() {
   if (detectorPromise) return detectorPromise;
 
   detectorPromise = (async () => {
-    await tf.ready();
-
-    try {
-      await tf.setBackend('webgl');
-      await tf.ready();
-    } catch {
-      // Fall back to the default backend.
-    }
+    await initTensorFlowBackend();
 
     const detector = await poseDetection.createDetector(MOVENET_MODEL, MOVENET_CONFIG);
     return detector;
