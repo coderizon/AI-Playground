@@ -27,9 +27,6 @@ const VisualQA = lazy(() =>
 const LLMChat = lazy(() =>
   import('./modules/llm-chat/LLMChat.jsx'),
 );
-const LLMTeachable = lazy(() =>
-  import('./modules/llm-teachable/LLMTeachable.jsx'),
-);
 const ImageSegmentation = lazy(() =>
   import('./modules/image-segmentation/ImageSegmentation.jsx'),
 );
@@ -83,14 +80,6 @@ export default function App() {
         element={
           <LazyRoute>
             <LLMChat />
-          </LazyRoute>
-        }
-      />
-      <Route
-        path="/llm-teachable"
-        element={
-          <LazyRoute>
-            <LLMTeachable />
           </LazyRoute>
         }
       />

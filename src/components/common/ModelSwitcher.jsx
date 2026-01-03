@@ -21,11 +21,6 @@ const MODELS = [
     path: '/llm-chat',
   },
   {
-    id: 'llm-teachable',
-    label: 'Teachable LLM',
-    path: '/llm-teachable',
-  },
-  {
     id: 'text-classification',
     label: 'Textklassifikation',
     path: '/text-classification',
