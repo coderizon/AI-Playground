@@ -37,6 +37,9 @@ const TextClassification = lazy(() =>
   import('./modules/text-classification/TextClassification.jsx'),
 );
 const FaqPage = lazy(() => import('./modules/faq/FaqPage.jsx'));
+const DepthEstimation = lazy(() =>
+  import('./modules/depth-estimation/DepthEstimation.jsx'),
+);
 
 function LazyRoute({ children }) {
   return <Suspense fallback={<div>Lade Modul...</div>}>{children}</Suspense>;
@@ -139,6 +142,14 @@ export default function App() {
         element={
           <LazyRoute>
             <FaqPage />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/depth-estimation"
+        element={
+          <LazyRoute>
+            <DepthEstimation />
           </LazyRoute>
         }
       />

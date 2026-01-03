@@ -134,6 +134,19 @@ const MODELS = [
     ],
     hasHero: true,
   },
+  {
+    id: 'tiefenschaetzung',
+    mode: 'image',
+    title: 'Tiefenschätzung',
+    description: 'Erkenne die räumliche Tiefe in Bildern und nutze sie für Effekte.',
+    imageSrc: '/assets/images/bildsegmentierung.png',
+    imageAlt: 'Tiefenschätzung Vorschau',
+    tags: [
+      { label: 'Experimentell', variant: 'warning' },
+      { label: 'Visuell', variant: 'primary' },
+    ],
+    hasHero: true,
+  },
 ];
 
 export default function LandingPage() {
@@ -188,6 +201,10 @@ export default function LandingPage() {
       }
       if (model?.id === 'llm-chat') {
         navigate('/llm-chat');
+        return;
+      }
+      if (model?.id === 'tiefenschaetzung') {
+        navigate('/depth-estimation');
         return;
       }
 
