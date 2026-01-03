@@ -86,6 +86,19 @@ const MODELS = [
     hasHero: true,
   },
   {
+    id: 'head-tracking',
+    mode: 'image',
+    title: 'Kopftracking',
+    description: 'Kopfposition und Distanz tracken.',
+    imageSrc: '/assets/images/Gesichtsmerkmale.png',
+    imageAlt: 'Kopftracking Vorschau',
+    tags: [
+      { label: 'Arduino', variant: 'success' },
+      { label: 'Plus', variant: 'success' },
+    ],
+    hasHero: true,
+  },
+  {
     id: 'audioerkennung',
     mode: 'audio',
     title: 'Audioerkennung',
@@ -159,6 +172,10 @@ export default function LandingPage() {
       }
       if (model?.id === 'gestenerkennung') {
         navigate('/gestenerkennung');
+        return;
+      }
+      if (model?.id === 'head-tracking') {
+        navigate('/head-tracking');
         return;
       }
       if (model?.id === 'audioerkennung') {

@@ -21,6 +21,9 @@ const ObjectDetection = lazy(() =>
 const HandGestures = lazy(() =>
   import('./modules/hand-gestures/HandGestures.jsx'),
 );
+const HeadTracking = lazy(() =>
+  import('./modules/head-tracking/HeadTracking.jsx'),
+);
 const VisualQA = lazy(() =>
   import('./modules/visual-qa/VisualQA.jsx'),
 );
@@ -120,6 +123,14 @@ export default function App() {
         element={
           <LazyRoute>
             <HandGestures />
+          </LazyRoute>
+        }
+      />
+      <Route
+        path="/head-tracking"
+        element={
+          <LazyRoute>
+            <HeadTracking />
           </LazyRoute>
         }
       />

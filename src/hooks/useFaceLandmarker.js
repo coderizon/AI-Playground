@@ -53,6 +53,7 @@ async function loadFaceLandmarkerOnce() {
       runningMode: 'VIDEO',
       numFaces: 1,
       outputFaceBlendshapes: true,
+      refineLandmarks: true,
     });
 
     return landmarker;
